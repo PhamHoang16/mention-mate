@@ -16,8 +16,8 @@ ALERT_CHAT_ID = int(os.getenv('TG_ALERT_CHAT_ID'))  # VD: -100123456789 hoặc u
 
 async def main():
     # Khởi tạo client BÊN TRONG async để tránh lỗi event loop trên Python 3.10+
-    # File session sẽ được lưu tại thư mục hiện tại
-    client = TelegramClient('mentions_session', API_ID, API_HASH)
+    # File session sẽ được lưu tại thư mục data/
+    client = TelegramClient('data/mentions_session', API_ID, API_HASH)
 
     @client.on(events.NewMessage(incoming=True))
     async def handle_new_message(event):

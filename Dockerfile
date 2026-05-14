@@ -8,7 +8,6 @@ FROM python:3.11-slim
 
 # Tạo non-root user để tăng tính bảo mật khi chạy trên K8s/VM
 RUN useradd -m -r -u 1001 tgbot
-USER tgbot
 
 WORKDIR /app
 
@@ -16,8 +15,10 @@ WORKDIR /app
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --chown=tgbot:tgbot main.py .
 
-# Thư mục chứa session file
-RUN mkdir -p /app/data
+# Tạo thư mục data (còn đang là root) rồi mới chown và switch user
+RUN mkdir -p /app/data && chown -R tgbot:tgbot /app
+
+USER tgbot
 ENV HOME=/app
 
 CMD ["python", "main.py"]
