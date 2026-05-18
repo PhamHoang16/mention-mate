@@ -59,20 +59,40 @@ For a click-by-click walkthrough with screenshots, see [docs/SETUP.md](docs/SETU
 
 ## Install
 
-### 1. Download the release
-Grab `mention-mate-v0.x.y.zip` from the [Releases page](https://github.com/PhamHoang16/mention-mate/releases) and unzip it anywhere.
+### 1. Get the release
+
+**Via browser:** download `mention-mate-v0.x.y.zip` from the [Releases page](https://github.com/PhamHoang16/mention-mate/releases) and unzip it anywhere.
+
+**Via CLI** (headless Ubuntu, SSH session, or you just prefer the terminal):
+
+```bash
+# Replace v0.1.0 with the version you want (see Releases page for latest)
+TAG=v0.1.0
+curl -L -o mention-mate.zip \
+    "https://github.com/PhamHoang16/mention-mate/releases/download/$TAG/mention-mate-$TAG.zip"
+unzip mention-mate.zip && cd "mention-mate-$TAG"
+```
+
+Or `git clone` if you prefer working from source (wizards live in `scripts/` instead of the root):
+
+```bash
+git clone https://github.com/PhamHoang16/mention-mate.git
+cd mention-mate
+# then run scripts/setup.sh instead of ./setup.sh
+```
 
 ### 2. Run the wizard
-Open a terminal in the extracted folder.
 
 **Linux / macOS:**
 ```bash
 ./setup.sh
+# or scripts/setup.sh if you used git clone
 ```
 
 **Windows (PowerShell):**
 ```powershell
 .\setup.ps1
+# or .\scripts\setup.ps1 if you used git clone
 ```
 
 > If PowerShell blocks the script: `powershell -ExecutionPolicy Bypass -File setup.ps1`
