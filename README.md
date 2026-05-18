@@ -25,25 +25,45 @@ Built for DevOps engineers and product managers who get pulled into dozens of pr
 
 ---
 
-## Quick install
+## How it works
 
-**Prerequisites:**
-- A running Docker runtime (Docker Engine / Desktop / Colima / Podman)
-- Internet access to `api.telegram.org` and `ghcr.io`
-- A personal Telegram account
-- 5–15 minutes
+MentionMate is a small **Docker container that runs on your own machine**. Inside it, two Telegram clients work together:
 
-### 1. Prepare Telegram credentials
+1. A **userbot** signs in with your personal Telegram account and watches your groups for messages that @mention you.
+2. A **bot** (the @BotFather kind) takes those matches and DMs them to you — which triggers Telegram's regular push notification, even when the original group is muted.
 
-Before running the wizard, gather three things:
+That's the whole machinery. No cloud server, no database, no daemon outside that one container. The image is published on GitHub Container Registry; `docker compose` pulls it and brings it up locally.
 
-1. **API_ID and API_HASH:** go to https://my.telegram.org/apps → sign in with your phone number → click *"API development tools"* → *"Create new application"*. Copy both values.
-2. **Bot Token:** chat with [@BotFather](https://t.me/BotFather) → send `/newbot` → choose a name and username → BotFather returns a token like `1234567890:AAAA...`.
-3. **Your username:** your Telegram username (without the `@`).
+**Why two clients?** A userbot can't message itself in a way that triggers a push (Telegram silently delivers self-messages). A bot, on the other hand, can DM you once you've `/start`ed it. So: userbot reads, bot sends.
 
-### 2. Download the release and run the wizard
+---
 
-Download `mention-mate-v0.x.y.zip` from the [Releases page](https://github.com/PhamHoang16/mention-mate/releases), unzip it, open a terminal in the extracted folder, and run:
+## What you need
+
+About **10–15 minutes** and the following:
+
+| Requirement | Where to get it | Effort |
+|---|---|---|
+| 🐳 **Docker runtime** | Docker Engine, Docker Desktop, Colima, or Podman — any modern setup works | ~10 min if not installed |
+| 🌐 **Internet access** | Outbound to `api.telegram.org` (always) and `ghcr.io` (one-time image pull) | — |
+| 📱 **Telegram account** | The personal account whose mentions you want to catch | already have |
+| 🔑 **API credentials** | https://my.telegram.org/apps → *"Create new application"* → copy `API_ID` + `API_HASH` | ~2 min |
+| 🤖 **Bot token** | Chat [@BotFather](https://t.me/BotFather) → `/newbot` → name it → copy the token | ~1 min |
+| 👤 **Your username** | Telegram → Settings (without the `@`) | — |
+
+The wizard prompts for each value one at a time — no need to memorize anything, just have them ready to paste.
+
+For a click-by-click walkthrough with screenshots, see [docs/SETUP.md](docs/SETUP.md).
+
+---
+
+## Install
+
+### 1. Download the release
+Grab `mention-mate-v0.x.y.zip` from the [Releases page](https://github.com/PhamHoang16/mention-mate/releases) and unzip it anywhere.
+
+### 2. Run the wizard
+Open a terminal in the extracted folder.
 
 **Linux / macOS:**
 ```bash
@@ -57,20 +77,10 @@ Download `mention-mate-v0.x.y.zip` from the [Releases page](https://github.com/P
 
 > If PowerShell blocks the script: `powershell -ExecutionPolicy Bypass -File setup.ps1`
 
-The wizard automatically:
-1. Verifies Docker is running
-2. Prompts for the 4 Telegram values (with real-time validation)
-3. Pulls the multi-arch image from ghcr.io
-4. Discovers your alert `chat_id` by asking you to `/start` the bot
-5. Sends a test message to confirm the right chat
-6. Walks you through Telethon userbot login (phone + OTP + 2FA if enabled)
-7. Starts the container and prints a summary
+The wizard verifies Docker, prompts for the inputs above (with real-time validation), pulls the image, discovers your alert chat, sends a test message, walks you through Telethon login (phone + OTP + 2FA), and starts the container. Around **5–15 minutes** end-to-end.
 
-Total time: **~10–15 minutes** for technical users, **~20–30 minutes** the first time if you're new to the Telegram API.
-
-### 3. Verify
-
-After the wizard completes, ask someone (or a second account) to `@your_username` in any group you're a member of. Within seconds, the bot you just configured will DM you the alert.
+### 3. Verify it works
+From any group you're in, have someone @mention you (or use a second account). Within seconds, the bot DMs you the alert.
 
 ---
 
@@ -116,33 +126,13 @@ If your employer has formal data-handling policies around messaging tools, it's 
 
 ---
 
-## Architecture at a glance
-
-```
-Telegram group ──► Telethon userbot (reads messages)
-                        │
-                        │ detects @mention
-                        ▼
-                  Telegram Bot HTTP API (sends alert)
-                        │
-                        ▼
-                  Push notification → you
-```
-
-**Why two clients?** A userbot cannot send a message to itself in a way that triggers a push notification (Telegram silently delivers self-messages). A bot, on the other hand, can DM a user (once the user has `/start`ed the bot). So: userbot reads, bot sends.
-
----
-
 ## Roadmap
 
 | Phase | Goal | Status |
 |---|---|---|
-| **Phase 0** | Security hotfix (revoke leaked token, purge git history) | 🔴 Required before public release |
 | **Phase 1** | Hardening (structured logging, health endpoint, retries, tests) | ⏭️ Planned |
-| **Phase 2** | Productization (this release) — distribution, wizard, docs | 🟡 In progress |
+| **Phase 2** | Productization (this release) — distribution, wizard, docs | ✅ Released as v0.1.0 |
 | **Phase 3** | Feature expansion (multi-keyword, digest, action buttons, web UI) | ⏭️ Planned |
-
-Full roadmap: see the [internal roadmap document](.vsaf/docs/planning-artifacts/prd-distribution.md).
 
 ---
 
