@@ -1,3 +1,4 @@
 telethon==1.33.1
 # cryptg==0.4.0 # Optional: tăng tốc mã hóa, cần Rust compiler để build — bật khi dùng Docker
 python-dotenv==1.0.1 # Load biến môi trường từ file .env khi chạy local
+aiohttp==3.9.5 # HTTP client để gọi Telegram Bot API gửi alert
