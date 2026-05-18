@@ -43,7 +43,7 @@ Before running the wizard, gather three things:
 
 ### 2. Download the release and run the wizard
 
-Download `mention-mate-v0.x.y.zip` from the [Releases page](https://github.com/hoangp47/mention-mate/releases), unzip it, open a terminal in the extracted folder, and run:
+Download `mention-mate-v0.x.y.zip` from the [Releases page](https://github.com/PhamHoang16/mention-mate/releases), unzip it, open a terminal in the extracted folder, and run:
 
 **Linux / macOS:**
 ```bash
@@ -147,7 +147,7 @@ Full roadmap: see the [internal roadmap document](.vsaf/docs/planning-artifacts/
 
 ## Contribute / report issues
 
-- 🐛 Bug or feature request: [GitHub Issues](https://github.com/hoangp47/mention-mate/issues)
+- 🐛 Bug or feature request: [GitHub Issues](https://github.com/PhamHoang16/mention-mate/issues)
 - 💬 Discussion: TBD
 
 ---

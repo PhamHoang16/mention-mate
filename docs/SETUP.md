@@ -102,7 +102,7 @@ Open Telegram → Settings → look up your username (without `@`). Example: `ho
 
 ## Step 3 — Download MentionMate
 
-1. Go to https://github.com/hoangp47/mention-mate/releases
+1. Go to https://github.com/PhamHoang16/mention-mate/releases
 2. Find the latest release (e.g. `v0.1.0`).
 3. Download `mention-mate-v0.1.0.zip` from the "Assets" section.
 4. Unzip into any folder (e.g. `~/MentionMate` on Linux/macOS, `C:\MentionMate` on Windows).
@@ -163,7 +163,7 @@ The wizard verifies Docker, Compose v2, and any prior configuration. If a check 
 If the format is wrong, the wizard reports the error and re-prompts without advancing.
 
 ### Step 8: Pull the image
-The wizard pulls `ghcr.io/hoangp47/mention-mate:latest` — the first pull takes 1–2 minutes.
+The wizard pulls `ghcr.io/phamhoang16/mention-mate:latest` — the first pull takes 1–2 minutes.
 
 ### Step 9: Discover chat_id
 

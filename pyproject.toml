@@ -28,9 +28,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/hoangp47/mention-mate"
-Issues = "https://github.com/hoangp47/mention-mate/issues"
-Changelog = "https://github.com/hoangp47/mention-mate/blob/master/CHANGELOG.md"
+Homepage = "https://github.com/PhamHoang16/mention-mate"
+Issues = "https://github.com/PhamHoang16/mention-mate/issues"
+Changelog = "https://github.com/PhamHoang16/mention-mate/blob/master/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]

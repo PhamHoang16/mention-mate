@@ -1,5 +1,5 @@
 # MentionMate — Telegram mention alert daemon
-# Docs: https://github.com/hoangp47/mention-mate
+# Docs: https://github.com/PhamHoang16/mention-mate
 #
 # You only need this file + .env (from .env.example) + a ./data directory,
 # then run: docker compose up -d
@@ -8,7 +8,7 @@
 
 services:
   bot:
-    image: ghcr.io/hoangp47/mention-mate:latest
+    image: ghcr.io/phamhoang16/mention-mate:latest
     container_name: mention-mate
     restart: unless-stopped
 

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # MentionMate — Update wizard for Linux/macOS
-# Docs: https://github.com/hoangp47/mention-mate
+# Docs: https://github.com/PhamHoang16/mention-mate
 #
 # Usage: ./update.sh
 
 set -euo pipefail
 
-readonly IMAGE="ghcr.io/hoangp47/mention-mate"
+readonly IMAGE="ghcr.io/phamhoang16/mention-mate"
 readonly SESSION_FILE="./data/mentions_session.session"
 
 if [[ -t 1 ]]; then

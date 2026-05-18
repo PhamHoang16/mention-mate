@@ -13,7 +13,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}   # ví dụ: hoangp47/mention-mate
+  IMAGE_NAME: ${{ github.repository }}   # ví dụ: PhamHoang16/mention-mate
 
 jobs:
   release:

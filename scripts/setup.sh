@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # MentionMate — Setup wizard for Linux/macOS
-# Docs: https://github.com/hoangp47/mention-mate
+# Docs: https://github.com/PhamHoang16/mention-mate
 #
 # Usage: ./setup.sh
 # Verbose mode: ./setup.sh -v
@@ -8,7 +8,7 @@
 set -euo pipefail
 
 # ----- Constants -----
-readonly IMAGE="ghcr.io/hoangp47/mention-mate:latest"
+readonly IMAGE="ghcr.io/phamhoang16/mention-mate:latest"
 readonly ENV_FILE=".env"
 readonly DATA_DIR="./data"
 readonly SESSION_FILE="${DATA_DIR}/mentions_session.session"
@@ -40,7 +40,7 @@ Usage:
   ./setup.sh -v        Run verbose (print every docker command)
   ./setup.sh -h        Show this help
 
-Documentation: https://github.com/hoangp47/mention-mate/blob/master/docs/SETUP.md
+Documentation: https://github.com/PhamHoang16/mention-mate/blob/master/docs/SETUP.md
 EOF
             exit 0
             ;;
@@ -363,8 +363,8 @@ ${C_GREEN}${C_BOLD}MentionMate has been installed successfully.${C_RESET}
   Restart:        ${C_BOLD}${COMPOSE_CMD} restart${C_RESET}
   Update:         ${C_BOLD}./update.sh${C_RESET}
 
-📖 Documentation:  https://github.com/hoangp47/mention-mate
-🐛 Report issues:  https://github.com/hoangp47/mention-mate/issues
+📖 Documentation:  https://github.com/PhamHoang16/mention-mate
+🐛 Report issues:  https://github.com/PhamHoang16/mention-mate/issues
 
 You will receive an alert on Telegram whenever someone @${TG_MY_USERNAME:-username} mentions you in any group the userbot is a member of.
 EOF
@@ -374,7 +374,7 @@ EOF
 main() {
     printf '%s\n' "${C_BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     printf '   MentionMate Setup Wizard (Linux/macOS)\n'
-    printf '   github.com/hoangp47/mention-mate\n'
+    printf '   github.com/PhamHoang16/mention-mate\n'
     printf '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━%s\n' "$C_RESET"
 
     check_docker

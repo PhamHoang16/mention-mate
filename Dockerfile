@@ -32,7 +32,7 @@ ENV HOME=/app
 # OCI image annotations — static labels; CI injects dynamic ones (version, revision, created)
 LABEL org.opencontainers.image.title="MentionMate" \
       org.opencontainers.image.description="Telegram mention alert daemon — never miss when your team @mentions you" \
-      org.opencontainers.image.source="https://github.com/hoangp47/mention-mate" \
+      org.opencontainers.image.source="https://github.com/PhamHoang16/mention-mate" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.authors="hoangp47"
 

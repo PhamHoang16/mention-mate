@@ -1,11 +1,11 @@
 # MentionMate — Update wizard for Windows (PowerShell 5.1+)
-# Docs: https://github.com/hoangp47/mention-mate
+# Docs: https://github.com/PhamHoang16/mention-mate
 #
 # Usage: .\update.ps1
 
 $ErrorActionPreference = 'Stop'
 
-$IMAGE       = 'ghcr.io/hoangp47/mention-mate'
+$IMAGE       = 'ghcr.io/phamhoang16/mention-mate'
 $SessionFile = '.\data\mentions_session.session'
 
 function Write-Ok    { param($Msg) Write-Host "✅ $Msg" -ForegroundColor Green }

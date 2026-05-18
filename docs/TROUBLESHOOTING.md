@@ -1,6 +1,6 @@
 # Troubleshooting — MentionMate
 
-Common problems and fixes. If your issue isn't listed, open a [GitHub issue](https://github.com/hoangp47/mention-mate/issues) with full logs and the version you're running.
+Common problems and fixes. If your issue isn't listed, open a [GitHub issue](https://github.com/PhamHoang16/mention-mate/issues) with full logs and the version you're running.
 
 ---
 
@@ -56,7 +56,7 @@ You're running `docker-compose` v1 (hyphenated, Python-based). The wizard will f
 
 ### ❌ `ERR-DIST-002: Image pull failed.`
 
-The wizard could not pull from `ghcr.io/hoangp47/mention-mate`.
+The wizard could not pull from `ghcr.io/phamhoang16/mention-mate`.
 
 **Diagnose:**
 ```bash
@@ -286,7 +286,7 @@ docker inspect mention-mate --format '{{.Architecture}}'
 
 It should be `arm64`. If it's `amd64`, re-pull with the correct platform:
 ```bash
-docker pull --platform linux/arm64 ghcr.io/hoangp47/mention-mate:latest
+docker pull --platform linux/arm64 ghcr.io/phamhoang16/mention-mate:latest
 docker compose up -d --force-recreate
 ```
 
@@ -330,7 +330,7 @@ rm -rf data .env
 
 ## Report a new issue
 
-If your problem isn't covered above, open a [GitHub issue](https://github.com/hoangp47/mention-mate/issues/new) with:
+If your problem isn't covered above, open a [GitHub issue](https://github.com/PhamHoang16/mention-mate/issues/new) with:
 
 1. **OS and version** (e.g. Ubuntu 22.04, Windows 11 22H2, macOS 13.5).
 2. **Docker version:** `docker version`.
