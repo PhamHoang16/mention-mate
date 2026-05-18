@@ -1,117 +1,117 @@
 # Setup Guide — MentionMate
 
-Hướng dẫn cài đặt step-by-step với placeholder cho screenshot (sẽ bổ sung sau pilot).
+Step-by-step install instructions with screenshot placeholders (to be added after pilot).
 
-> ⏱️ **Thời gian dự kiến:** 10-15 phút (tech) / 20-30 phút (lần đầu).
+> ⏱️ **Estimated time:** 10–15 minutes (technical user) / 20–30 minutes (first-time user).
 
 ---
 
-## Yêu cầu
+## Requirements
 
-| Mục | Yêu cầu |
+| Item | Requirement |
 |---|---|
 | **OS** | Linux (Ubuntu 22.04+, Debian 12+, Fedora 38+), macOS 13+, Windows 10/11 |
 | **Docker runtime** | Docker Engine 20.10+ / Docker Desktop 4.x / Colima 0.5+ / Podman 4+ |
-| **Disk** | ~500MB free (image + session + log) |
-| **Network** | Truy cập được `api.telegram.org` và `ghcr.io` (mạng cá nhân, 4G, hoặc internet công ty cho phép) |
-| **Tài khoản** | 1 account Telegram cá nhân (đã xác minh SĐT) |
+| **Disk** | ~500 MB free (image + session + logs) |
+| **Network** | Outbound access to `api.telegram.org` and `ghcr.io` (personal Wi-Fi, mobile hotspot, or a corporate network that permits it) |
+| **Account** | A personal Telegram account (phone-verified) |
 
-> ⚠️ **Mạng công ty Viettel:** Nếu intranet chặn `api.telegram.org` → tool không chạy được. Phải dùng wifi cá nhân, 4G hotspot, hoặc máy ở nhà.
+> ⚠️ **Corporate networks (e.g. Viettel intranet):** if `api.telegram.org` is blocked, the tool cannot run on that network. Use personal Wi-Fi, a 4G hotspot, or a home machine.
 
 ---
 
-## Bước 1: Cài Docker runtime (nếu chưa có)
+## Step 1 — Install a Docker runtime (skip if you already have one)
 
 ### Linux
 
-Khuyên dùng **Docker Engine** (free, không cần Docker Desktop license):
+Use **Docker Engine** (free, no Docker Desktop license required):
 
 ```bash
-# Ubuntu/Debian
+# Ubuntu / Debian
 curl -fsSL https://get.docker.com | sudo sh
 sudo usermod -aG docker $USER
-# Logout/login để effect group
+# Log out and back in for the group change to take effect.
 ```
 
-Verify: `docker info` không báo lỗi.
+Verify: `docker info` runs without error.
 
 ### macOS
 
-Khuyên dùng **Colima** (free, lightweight, free for commercial use):
+Use **Colima** (free, lightweight, no commercial-use restrictions):
 
 ```bash
 brew install colima docker
 colima start
 ```
 
-Hoặc **Rancher Desktop** / **Podman Desktop** (free GUI alternatives).
+Alternatives: **Rancher Desktop** or **Podman Desktop** (both free with a GUI).
 
-> ⚠️ **Tránh Docker Desktop** nếu công ty bạn có >250 nhân viên (vướng license).
+> ⚠️ **Avoid Docker Desktop** if your company has more than 250 employees — it requires a paid commercial license.
 
 ### Windows
 
-Khuyên dùng **WSL2 + Docker Engine** (free) HOẶC **Podman Desktop** (free GUI):
+Recommended: **WSL2 + Docker Engine** (free) or **Podman Desktop** (free GUI).
 
-**Option A: WSL2 + Docker Engine**
-1. Cài WSL2: PowerShell admin → `wsl --install`
-2. Restart máy
-3. Vào Ubuntu trong WSL: `curl -fsSL https://get.docker.com | sudo sh`
-4. Wizard chạy trong terminal WSL (KHÔNG phải PowerShell).
+**Option A — WSL2 + Docker Engine**
+1. In an elevated PowerShell: `wsl --install`
+2. Restart your machine.
+3. Inside the Ubuntu WSL shell: `curl -fsSL https://get.docker.com | sudo sh`
+4. Run the wizard from the WSL terminal (not PowerShell).
 
-**Option B: Podman Desktop**
-1. Tải https://podman.io/docs/installation
-2. Cài + start machine
-3. `setup.ps1` sẽ tự detect.
+**Option B — Podman Desktop**
+1. Install from https://podman.io/docs/installation
+2. Start the Podman machine from the GUI.
+3. `setup.ps1` will detect it automatically.
 
 > _Screenshot 1 placeholder: Docker Desktop / Colima / Podman running indicator._
 
 ---
 
-## Bước 2: Lấy Telegram credentials
+## Step 2 — Get your Telegram credentials
 
-### 2a. API_ID + API_HASH
+### 2a. API_ID and API_HASH
 
-1. Mở https://my.telegram.org/apps
-2. Đăng nhập bằng SĐT Telegram của bạn — sẽ nhận code qua Telegram
-3. Bấm **"API development tools"**
-4. Điền form:
-   - App title: bất kỳ (vd "MentionMate-personal")
-   - Short name: bất kỳ (vd "mention-tool")
+1. Open https://my.telegram.org/apps
+2. Sign in with your Telegram phone number — you'll receive a code in Telegram.
+3. Click **"API development tools"**.
+4. Fill the form:
+   - App title: anything (e.g. `MentionMate-personal`)
+   - Short name: anything (e.g. `mention-tool`)
    - Platform: Desktop
    - Description: optional
-5. Bấm **"Create application"**
-6. Copy **API_ID** (số) và **API_HASH** (32 ký tự hex) — giữ kín, không share
+5. Click **"Create application"**.
+6. Copy your **API_ID** (a number) and **API_HASH** (32 hex characters). Keep them private.
 
-> _Screenshot 2 placeholder: my.telegram.org/apps showing API_ID + API_HASH._
+> _Screenshot 2 placeholder: my.telegram.org/apps showing API_ID and API_HASH._
 
 ### 2b. Bot Token
 
-1. Mở Telegram, search và chat với [@BotFather](https://t.me/BotFather)
-2. Gõ `/newbot`
-3. BotFather hỏi tên bot — đặt tên hiển thị (vd "Mention Alert của Hoang")
-4. BotFather hỏi username — đặt username kết thúc bằng `bot` (vd `hoangp47_mention_bot`)
-5. BotFather trả về **token** dạng `1234567890:AAAA-xxxx...` — copy ngay, giữ kín
+1. In Telegram, search for and open a chat with [@BotFather](https://t.me/BotFather).
+2. Send `/newbot`.
+3. BotFather asks for a display name — pick anything (e.g. "Hoang's Mention Alert").
+4. BotFather asks for a username — it must end with `bot` (e.g. `hoangp47_mention_bot`).
+5. BotFather replies with a **token** like `1234567890:AAAA-xxxx...`. Copy it immediately and keep it private.
 
-> _Screenshot 3 placeholder: BotFather conversation showing /newbot flow + token._
+> _Screenshot 3 placeholder: BotFather conversation showing the /newbot flow and token._
 
-### 2c. Username Telegram của bạn
+### 2c. Your Telegram username
 
-Mở Telegram → Settings → tìm username (không có @). Vd: `hoangp47`. Nếu chưa có thì đặt mới qua Settings → Username.
+Open Telegram → Settings → look up your username (without `@`). Example: `hoangp47`. If you don't have one yet, set it via Settings → Username.
 
 ---
 
-## Bước 3: Tải MentionMate
+## Step 3 — Download MentionMate
 
-1. Vào https://github.com/hoangp47/mentionmate/releases
-2. Tìm release mới nhất (vd `v0.1.0`)
-3. Tải file `mentionmate-v0.1.0.zip` từ phần "Assets"
-4. Giải nén vào 1 thư mục bất kỳ (vd `~/MentionMate` trên Linux, `C:\MentionMate` trên Windows)
+1. Go to https://github.com/hoangp47/mentionmate/releases
+2. Find the latest release (e.g. `v0.1.0`).
+3. Download `mentionmate-v0.1.0.zip` from the "Assets" section.
+4. Unzip into any folder (e.g. `~/MentionMate` on Linux/macOS, `C:\MentionMate` on Windows).
 
 > _Screenshot 4 placeholder: GitHub Releases page with zip asset highlighted._
 
 ---
 
-## Bước 4: Chạy setup wizard
+## Step 4 — Run the setup wizard
 
 ### Linux / macOS
 
@@ -122,99 +122,99 @@ cd ~/MentionMate
 
 ### Windows
 
-Mở PowerShell (admin không bắt buộc):
+Open PowerShell (admin not required):
 
 ```powershell
 cd C:\MentionMate
 .\setup.ps1
 ```
 
-Nếu PowerShell báo lỗi script bị chặn:
+If PowerShell blocks the script:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File setup.ps1
 ```
 
-Hoặc set policy cho session hiện tại:
+Or set the policy for the current session:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process Bypass
 .\setup.ps1
 ```
 
-> _Screenshot 5 placeholder: Wizard running in terminal showing first prompt._
+> _Screenshot 5 placeholder: wizard running in terminal at the first prompt._
 
 ---
 
-## Bước 5: Đi qua wizard
+## Step 5 — Walk through the wizard
 
-Wizard sẽ guide qua các bước. **Đọc kỹ từng prompt** trước khi gõ.
+The wizard prompts you step by step. **Read each prompt carefully** before typing.
 
-### Step 1-3: Auto checks
-Wizard kiểm tra Docker, compose v2, và cấu hình cũ. Nếu có lỗi → xem [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+### Steps 1–3: Automatic checks
+The wizard verifies Docker, Compose v2, and any prior configuration. If a check fails, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
-### Step 4-7: Nhập 4 thông tin
+### Steps 4–7: Enter the four values
 
-- **TG_API_ID**: số nguyên từ bước 2a
-- **TG_API_HASH**: 32 ký tự hex từ bước 2a (sẽ không hiển thị khi gõ — paste vào)
-- **TG_MY_USERNAME**: username từ bước 2c (KHÔNG có @)
-- **TG_BOT_TOKEN**: token từ bước 2b (không hiển thị)
+- **TG_API_ID:** the integer from step 2a.
+- **TG_API_HASH:** the 32 hex characters from step 2a (input is hidden — paste it in).
+- **TG_MY_USERNAME:** your username from step 2c (no `@`).
+- **TG_BOT_TOKEN:** the token from step 2b (input is hidden).
 
-Nếu nhập sai format, wizard sẽ báo lỗi và prompt lại — không advance.
+If the format is wrong, the wizard reports the error and re-prompts without advancing.
 
-### Step 8: Pull image
-Wizard tự pull `ghcr.io/hoangp47/mentionmate:latest` — lần đầu mất 1-2 phút.
+### Step 8: Pull the image
+The wizard pulls `ghcr.io/hoangp47/mentionmate:latest` — the first pull takes 1–2 minutes.
 
 ### Step 9: Discover chat_id
 
-Wizard yêu cầu bạn **mở Telegram và gửi `/start` cho bot vừa tạo**.
+The wizard asks you to **open Telegram and send `/start` to the bot you just created**.
 
-> ⚠️ Phải gửi cho ĐÚNG bot bạn vừa tạo qua BotFather, không phải bot khác. Wizard hiển thị username bot để bạn tìm đúng.
+> ⚠️ Send it to the bot **you** created in step 2b — not any other bot. The wizard prints the bot username so you can find it.
 
-Sau khi bạn gửi, nhấn Enter trong terminal. Wizard sẽ gọi `getUpdates`, tìm chat_id, gửi test message **"🔧 MentionMate setup test"**, và hỏi bạn có nhận được không.
+After you send `/start`, press Enter in the terminal. The wizard calls `getUpdates`, finds your chat_id, sends a test message — **"🔧 MentionMate setup test"** — and asks whether you received it.
 
-- Nếu nhận được → trả `y` để confirm.
-- Nếu không → wizard sẽ thử lại tối đa 3 lần.
+- If yes → type `y` to confirm.
+- If no → the wizard retries up to 3 times.
 
-> _Screenshot 6 placeholder: Setup test message received on Telegram._
+> _Screenshot 6 placeholder: setup test message received on Telegram._
 
-### Step 10: Ghi .env
-Wizard ghi `.env` với permission 600 (Linux/macOS) hoặc ACL owner-only (Windows). File này chứa secret — đừng share.
+### Step 10: Write `.env`
+The wizard writes `.env` with permission 600 on Linux/macOS or an owner-only ACL on Windows. This file holds your secrets — never share it.
 
-### Step 11: Đăng nhập Telethon userbot
+### Step 11: Log in to the Telethon userbot
 
-Wizard chạy 1 container interactive. Bạn cần nhập:
+The wizard runs an interactive container. You'll be asked for:
 
-1. **SĐT** kèm mã quốc gia, vd `+84912345678`
-2. **OTP** — Telegram gửi mã 5 chữ số đến app Telegram trên điện thoại bạn
-3. **Password 2FA** (nếu account có bật 2FA)
+1. **Phone number** including country code, e.g. `+84912345678`
+2. **One-time code** — Telegram sends a 5-digit code to the official "Telegram" chat in your app.
+3. **2FA password** (only if you have two-step verification enabled).
 
-Nếu nhập sai 3 lần liên tiếp, wizard sẽ exit. Thử lại bằng cách chạy lại `./setup.sh`.
+If you fail 3 times in a row, the wizard exits. Re-run `./setup.sh` to try again.
 
 > _Screenshot 7 placeholder: Telethon login prompts in terminal._
 
-### Step 12: Start container
-Wizard chạy `docker compose up -d`. Nếu thành công, in summary.
+### Step 12: Start the container
+The wizard runs `docker compose up -d`. On success, it prints a summary.
 
 ### Step 13: Summary
-Wizard in các lệnh hữu ích. Container giờ đang chạy.
+The wizard prints useful commands and the container is now running.
 
-> _Screenshot 8 placeholder: Wizard summary showing container running + commands._
-
----
-
-## Bước 6: Verify hoạt động
-
-Mở 1 group Telegram mà bạn đang là member, nhờ ai đó gửi tin nhắn có `@username_của_bạn` (hoặc tự tag mình từ account khác). Trong vài giây, bot vừa cài sẽ DM bạn tin nhắn alert.
-
-Nếu không nhận được → xem [TROUBLESHOOTING.md](TROUBLESHOOTING.md) §"Không nhận alert".
+> _Screenshot 8 placeholder: wizard summary showing running container and commands._
 
 ---
 
-## Bước 7 (optional): Auto-start khi boot máy
+## Step 6 — Verify it works
+
+Open a Telegram group you're a member of and ask someone to send a message mentioning `@your_username` (or use a second account). Within seconds, the bot you configured will DM you the alert.
+
+If no alert arrives → see [TROUBLESHOOTING.md](TROUBLESHOOTING.md) §"No alerts received".
+
+---
+
+## Step 7 (optional) — Auto-start on boot
 
 ### Linux (systemd)
-Container có `restart: unless-stopped` nên tự lên lại khi Docker daemon start. Để Docker tự start khi boot:
+The container has `restart: unless-stopped`, so it comes back automatically when the Docker daemon starts. To make Docker start on boot:
 ```bash
 sudo systemctl enable docker
 ```
@@ -225,16 +225,16 @@ brew services start colima
 ```
 
 ### Windows
-Docker Desktop / Podman Desktop có option *"Start at login"* trong settings.
+Docker Desktop and Podman Desktop both have a *"Start at login"* option in their settings.
 
 ---
 
-## Bước 8 (optional): Backup session file
+## Step 8 (optional) — Back up the session file
 
-Session file ở `data/mentions_session.session` tương đương credential. Backup định kỳ tránh mất khi tắt máy đột ngột:
+The session file at `data/mentions_session.session` is equivalent to a credential. Back it up periodically to avoid re-authentication after a hard shutdown:
 
 ```bash
-# Linux/macOS — copy vào ~/Backups/
+# Linux/macOS — copy to ~/Backups/
 cp data/mentions_session.session ~/Backups/mentionmate-session-$(date +%Y%m%d).session
 ```
 
@@ -243,16 +243,16 @@ cp data/mentions_session.session ~/Backups/mentionmate-session-$(date +%Y%m%d).s
 Copy-Item data\mentions_session.session "$env:USERPROFILE\Backups\mentionmate-session-$(Get-Date -Format yyyyMMdd).session"
 ```
 
-Update wizard sẽ tự nhắc backup nếu session > 7 ngày chưa backup.
+The update wizard automatically reminds you to back up if the session is more than 7 days old.
 
 ---
 
-## Bước tiếp theo
+## Next steps
 
-- 🐛 Có lỗi? → [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
-- 📝 Muốn upgrade? → `./update.sh` hoặc `.\update.ps1`
-- 🗑️ Muốn gỡ? → `docker compose down && rm -rf data .env` (chú ý: xoá session file cũng = mất quyền truy cập, cần Telethon login lại nếu cài lại)
+- 🐛 Hit a problem? → [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+- 📝 Need to upgrade? → `./update.sh` or `.\update.ps1`
+- 🗑️ Want to uninstall? → `docker compose down && rm -rf data .env` (note: removing the session file means you'll need to re-authenticate Telethon if you reinstall).
 
 ---
 
-*Hướng dẫn này cập nhật theo MentionMate v0.1.0. Screenshot sẽ được bổ sung sau pilot.*
+*This guide tracks MentionMate v0.1.0. Screenshots will be added after pilot testing.*

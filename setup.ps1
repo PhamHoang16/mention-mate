@@ -5,7 +5,7 @@
 #   .\setup.ps1
 #   .\setup.ps1 -Verbose
 #
-# Nếu PowerShell chặn:
+# If PowerShell blocks the script:
 #   powershell -ExecutionPolicy Bypass -File setup.ps1
 
 [CmdletBinding()]
@@ -39,12 +39,12 @@ if ($Help) {
     Write-Host @"
 MentionMate Setup Wizard (Windows)
 
-Cách dùng:
-  .\setup.ps1                   Chạy wizard interactive
-  .\setup.ps1 -Verbose          Chạy verbose
-  .\setup.ps1 -Help             Hiển thị help
+Usage:
+  .\setup.ps1                   Run the interactive wizard
+  .\setup.ps1 -Verbose          Run verbose
+  .\setup.ps1 -Help             Show this help
 
-Nếu bị chặn bởi ExecutionPolicy:
+If blocked by ExecutionPolicy:
   powershell -ExecutionPolicy Bypass -File setup.ps1
 
 Documentation: https://github.com/hoangp47/mentionmate/blob/master/docs/SETUP.md
@@ -54,17 +54,17 @@ Documentation: https://github.com/hoangp47/mentionmate/blob/master/docs/SETUP.md
 
 # ----- Step 0: Check ExecutionPolicy (FR-DIST-02 EX5) -----
 function Test-ExecutionPolicy {
-    Write-Step '0/12 Kiểm tra PowerShell ExecutionPolicy'
+    Write-Step '0/12 Checking PowerShell ExecutionPolicy'
     $policy = Get-ExecutionPolicy -Scope Process
     if ($policy -eq 'Restricted') {
-        Abort 'ERR-DIST-005: PowerShell đang chặn script chưa sign.' @"
-Chạy lệnh sau rồi thử lại:
+        Abort 'ERR-DIST-005: PowerShell is blocking unsigned scripts.' @"
+Run the following and retry:
   Set-ExecutionPolicy -Scope Process Bypass
 
-Hoặc khởi động lại:
+Or relaunch with:
   powershell -ExecutionPolicy Bypass -File setup.ps1
 
-Xem SETUP.md §Windows.
+See SETUP.md §Windows.
 "@
     }
     Write-Ok "ExecutionPolicy = $policy (OK)."
@@ -72,29 +72,29 @@ Xem SETUP.md §Windows.
 
 # ----- Step 1: Check Docker -----
 function Test-Docker {
-    Write-Step '1/12 Kiểm tra Docker'
+    Write-Step '1/12 Checking Docker'
     if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
-        Abort 'ERR-DIST-001: Không tìm thấy docker CLI.' @"
-Cài đặt Docker Desktop hoặc Docker Engine:
+        Abort 'ERR-DIST-001: docker CLI not found.' @"
+Install Docker Desktop or Docker Engine:
   Windows: https://docs.docker.com/desktop/install/windows-install/
-  Hoặc Podman Desktop: https://podman.io/docs/installation
+  Or Podman Desktop: https://podman.io/docs/installation
 "@
     }
     try {
         docker info 2>&1 | Out-Null
         if ($LASTEXITCODE -ne 0) { throw 'docker info exit non-zero' }
     } catch {
-        Abort 'ERR-DIST-001: Docker daemon chưa chạy.' @"
-Khởi động Docker Desktop từ Start Menu rồi thử lại.
+        Abort 'ERR-DIST-001: Docker daemon is not running.' @"
+Start Docker Desktop from the Start menu and retry.
 "@
     }
-    Write-Ok 'Docker daemon đang chạy.'
+    Write-Ok 'Docker daemon is running.'
 }
 
 # ----- Step 2: Check compose v2 -----
 $Script:ComposeCmd = @('docker', 'compose')
 function Test-Compose {
-    Write-Step '2/12 Kiểm tra docker compose'
+    Write-Step '2/12 Checking docker compose'
     try {
         docker compose version 2>&1 | Out-Null
         if ($LASTEXITCODE -eq 0) {
@@ -105,26 +105,26 @@ function Test-Compose {
     } catch { }
 
     if (Get-Command docker-compose -ErrorAction SilentlyContinue) {
-        Write-Warn 'Chỉ có docker-compose v1. Fallback nhưng khuyên upgrade.'
+        Write-Warn 'Only docker-compose v1 (legacy) is available. The wizard will fall back, but upgrading is recommended.'
         $Script:ComposeCmd = @('docker-compose')
     } else {
-        Abort 'Không tìm thấy docker compose hoặc docker-compose.' 'Reinstall Docker.'
+        Abort 'Neither docker compose nor docker-compose found.' 'Reinstall Docker.'
     }
 }
 
 # ----- Step 3: Detect existing install -----
 function Test-Existing {
-    Write-Step '3/12 Kiểm tra cấu hình cũ'
+    Write-Step '3/12 Checking for existing configuration'
     $existing = $false
-    if (Test-Path $EnvFile)     { Write-Warn '.env đã tồn tại.';        $existing = $true }
-    if (Test-Path $SessionFile) { Write-Warn "session file đã tồn tại: $SessionFile"; $existing = $true }
+    if (Test-Path $EnvFile)     { Write-Warn '.env already exists.';        $existing = $true }
+    if (Test-Path $SessionFile) { Write-Warn "Session file already exists: $SessionFile"; $existing = $true }
 
     if ($existing) {
-        $answer = Read-Host "`nGhi đè cấu hình cũ? (y/N) [N]"
-        if ($answer -notmatch '^(y|yes)$') { Abort 'Đã hủy. Cấu hình cũ giữ nguyên.' }
-        Write-Warn 'Sẽ overwrite .env (session giữ nguyên).'
+        $answer = Read-Host "`nOverwrite existing config? (y/N) [N]"
+        if ($answer -notmatch '^(y|yes)$') { Abort 'Cancelled. Existing configuration kept.' }
+        Write-Warn 'Will overwrite .env (session file is preserved).'
     } else {
-        Write-Ok 'Chưa có cấu hình cũ — proceed.'
+        Write-Ok 'No prior configuration found — proceeding.'
     }
 }
 
@@ -151,7 +151,7 @@ function Read-Validated {
         }
 
         if ([string]::IsNullOrWhiteSpace($value)) {
-            Write-Err 'Không được để trống.'
+            Write-Err 'Value cannot be empty.'
             continue
         }
         if ($value -notmatch $Regex) {
@@ -163,73 +163,73 @@ function Read-Validated {
 }
 
 function Get-UserInputs {
-    Write-Step '4/12 Nhập cấu hình Telegram'
+    Write-Step '4/12 Telegram credentials'
 
     $Script:TG_API_ID = Read-Validated `
-        -Prompt '🔑 Nhập TG_API_ID (số nguyên, lấy từ https://my.telegram.org/apps):' `
+        -Prompt '🔑 Enter TG_API_ID (integer, from https://my.telegram.org/apps):' `
         -Regex  '^[0-9]+$' `
-        -ErrMsg 'TG_API_ID phải là số nguyên dương.'
+        -ErrMsg 'TG_API_ID must be a positive integer.'
 
     $Script:TG_API_HASH = Read-Validated `
-        -Prompt '🔑 Nhập TG_API_HASH (32 ký tự hex, KHÔNG echo):' `
+        -Prompt '🔑 Enter TG_API_HASH (32 hex characters, input hidden):' `
         -Regex  '^[a-f0-9]{32}$' `
-        -ErrMsg 'TG_API_HASH phải là 32 ký tự hex (a-f, 0-9).' `
+        -ErrMsg 'TG_API_HASH must be exactly 32 hex characters (a-f, 0-9).' `
         -Secret
 
     $Script:TG_MY_USERNAME = Read-Validated `
-        -Prompt '👤 Nhập username Telegram của bạn (KHÔNG có @, vd: hoangp47):' `
+        -Prompt '👤 Enter your Telegram username (without @, e.g. hoangp47):' `
         -Regex  '^[A-Za-z][A-Za-z0-9_]{4,31}$' `
-        -ErrMsg 'Username 5-32 ký tự, bắt đầu bằng chữ, chỉ chứa chữ/số/_.'
+        -ErrMsg 'Username must be 5-32 chars, start with a letter, contain only letters/digits/underscore.'
 
     $Script:TG_BOT_TOKEN = Read-Validated `
-        -Prompt '🤖 Nhập TG_BOT_TOKEN từ @BotFather (KHÔNG echo, dạng <số>:<chuỗi>):' `
+        -Prompt '🤖 Enter TG_BOT_TOKEN from @BotFather (input hidden, format <id>:<secret>):' `
         -Regex  '^[0-9]+:[A-Za-z0-9_-]{30,40}$' `
-        -ErrMsg 'Bot token sai format. Dạng: 1234567890:AAAA....' `
+        -ErrMsg 'Invalid bot token format. Expected: 1234567890:AAAA....' `
         -Secret
 }
 
 # ----- Step 8: Pull image -----
 function Invoke-PullImage {
-    Write-Step '5/12 Pull Docker image'
-    Write-Info "Đang pull $IMAGE ... (lần đầu có thể 1-2 phút)"
+    Write-Step '5/12 Pulling Docker image'
+    Write-Info "Pulling $IMAGE ... (first pull may take 1-2 minutes)"
     docker pull $IMAGE
     if ($LASTEXITCODE -ne 0) {
-        Abort 'ERR-DIST-002: Pull image fail.' @"
-Có thể do: (1) mạng không truy cập được ghcr.io, (2) firewall chặn.
+        Abort 'ERR-DIST-002: Image pull failed.' @"
+Possible causes: (1) network can't reach ghcr.io, (2) firewall is blocking it.
 Test: Invoke-WebRequest -Uri https://ghcr.io -Method Head
-Xem TROUBLESHOOTING.md §Network.
+See TROUBLESHOOTING.md §Network.
 "@
     }
-    Write-Ok 'Image đã pull thành công.'
+    Write-Ok 'Image pulled successfully.'
 }
 
 # ----- Step 9: Discover chat_id + send test -----
 function Get-ChatId {
-    Write-Step '6/12 Phát hiện chat_id (sub-flow UC-DIST-05)'
+    Write-Step '6/12 Discovering chat_id (sub-flow UC-DIST-05)'
 
-    # Lấy username bot từ getMe
+    # Fetch bot username from getMe
     try {
         $me = Invoke-RestMethod -Uri "https://api.telegram.org/bot$($Script:TG_BOT_TOKEN)/getMe" -TimeoutSec 10
         $botUsername = if ($me.ok) { $me.result.username } else { '' }
     } catch { $botUsername = '' }
 
     if ($botUsername) {
-        Write-Host "`n1. Mở Telegram, tìm @$botUsername (hoặc https://t.me/$botUsername)" -ForegroundColor White
-        Write-Host '2. Bấm START hoặc gửi /start cho bot'
-        Write-Host '3. Quay lại đây, nhấn Enter'
+        Write-Host "`n1. Open Telegram, find @$botUsername (or https://t.me/$botUsername)" -ForegroundColor White
+        Write-Host '2. Tap START or send /start to the bot'
+        Write-Host '3. Come back here and press Enter'
     } else {
-        Write-Warn 'Không lấy được username bot. Cứ thử /start với bot bạn vừa tạo.'
-        Write-Host "`nGửi /start cho bot trên Telegram, rồi nhấn Enter..."
+        Write-Warn 'Could not fetch bot username. Try /start with the bot you just created.'
+        Write-Host "`nSend /start to the bot in Telegram, then press Enter..."
     }
     Read-Host | Out-Null
 
     $maxAttempts = 3
     for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
-        Write-Info "Đang gọi getUpdates ... (lần thử $attempt/$maxAttempts)"
+        Write-Info "Calling getUpdates ... (attempt $attempt/$maxAttempts)"
         try {
             $updates = Invoke-RestMethod -Uri "https://api.telegram.org/bot$($Script:TG_BOT_TOKEN)/getUpdates" -TimeoutSec 10
         } catch {
-            Write-Warn "Không gọi được API: $($_.Exception.Message)"
+            Write-Warn "API call failed: $($_.Exception.Message)"
             $updates = $null
         }
 
@@ -247,48 +247,48 @@ function Get-ChatId {
         }
 
         if ($chatId) {
-            Write-Ok "Tìm thấy chat_id: $chatId"
+            Write-Ok "Found chat_id: $chatId"
 
             # Round-trip verify (BR-DIST-05-01)
-            Write-Info 'Đang gửi test message...'
+            Write-Info 'Sending test message...'
             try {
                 $sendResult = Invoke-RestMethod -Method Post `
                     -Uri "https://api.telegram.org/bot$($Script:TG_BOT_TOKEN)/sendMessage" `
                     -Body @{
                         chat_id = $chatId
-                        text    = '🔧 MentionMate setup test — nếu bạn thấy tin nhắn này, cấu hình đang đúng.'
+                        text    = '🔧 MentionMate setup test — if you can read this, your configuration is correct.'
                     } -TimeoutSec 10
             } catch {
-                Write-Warn "Gửi test fail: $($_.Exception.Message)"
+                Write-Warn "Send failed: $($_.Exception.Message)"
                 $sendResult = $null
             }
 
             if ($sendResult -and $sendResult.ok) {
-                $confirm = Read-Host "`nBạn có nhận được tin nhắn test trên Telegram không? (y/N)"
+                $confirm = Read-Host "`nDid you receive the test message on Telegram? (y/N)"
                 if ($confirm -match '^(y|yes)$') {
                     $Script:TG_ALERT_CHAT_ID = $chatId
                     return
                 }
-                Write-Warn 'User không nhận được — có thể chat_id sai. Thử lại.'
+                Write-Warn "Test message not received — chat_id may be wrong. Retrying."
             }
         } else {
-            Write-Warn 'Không thấy /start trong update gần đây. Bạn đã gửi /start cho ĐÚNG bot vừa tạo chưa?'
+            Write-Warn 'No /start message in recent updates. Did you /start the CORRECT bot you just created?'
         }
 
         if ($attempt -lt $maxAttempts) {
-            $retry = Read-Host "`nThử lại? (Y/n)"
+            $retry = Read-Host "`nRetry? (Y/n)"
             if ($retry -match '^(n|no)$') { break }
-            Write-Host 'Gửi /start cho bot lần nữa, rồi nhấn Enter...'
+            Write-Host 'Send /start to the bot again, then press Enter...'
             Read-Host | Out-Null
         }
     }
 
-    Abort "Không phát hiện được chat_id sau $maxAttempts lần thử." 'Xem TROUBLESHOOTING.md §chat_id.'
+    Abort "Could not detect chat_id after $maxAttempts attempts." 'See TROUBLESHOOTING.md §chat_id.'
 }
 
 # ----- Step 10: Write .env + restrict ACL -----
 function Write-EnvFile {
-    Write-Step '7/12 Ghi cấu hình vào .env'
+    Write-Step '7/12 Writing configuration to .env'
     $tmp = "$EnvFile.tmp"
     $now = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
     @"
@@ -302,28 +302,28 @@ TG_ALERT_CHAT_ID=$($Script:TG_ALERT_CHAT_ID)
 
     Move-Item -Force $tmp $EnvFile
 
-    # Restrict ACL — chỉ owner đọc/ghi (NFR-SEC-03)
+    # Restrict ACL — owner read/write only (NFR-SEC-03)
     try {
         icacls $EnvFile /inheritance:r 2>&1 | Out-Null
         icacls $EnvFile /grant:r "$($env:USERNAME):(R,W)" 2>&1 | Out-Null
-        Write-Ok ".env đã ghi với ACL owner-only."
+        Write-Ok ".env written with owner-only ACL."
     } catch {
-        Write-Warn "Không set được ACL ($($_.Exception.Message)). File có thể đọc được bởi user khác."
+        Write-Warn "Could not set ACL ($($_.Exception.Message)). File may be readable by other users."
     }
 }
 
 # ----- Step 11: Telethon auth -----
 function Invoke-TelethonAuth {
-    Write-Step '8/12 Đăng nhập Telethon userbot'
+    Write-Step '8/12 Telethon userbot login'
     New-Item -ItemType Directory -Force -Path $DataDir | Out-Null
 
     if (Test-Path $SessionFile) {
-        Write-Info 'Session file đã tồn tại — skip auth interactive.'
+        Write-Info 'Session file already exists — skipping interactive auth.'
         return
     }
 
-    Write-Info 'Sẽ chạy 1 container interactive — nhập SĐT (vd +84912345678) khi được hỏi.'
-    Write-Info 'Nếu account có 2FA, sẽ hỏi password sau OTP.'
+    Write-Info 'An interactive container will run — enter your phone number (e.g. +84912345678) when prompted.'
+    Write-Info "If your account has 2FA, you'll be asked for the password after the OTP."
 
     $cwd = (Get-Location).Path
     $maxAttempts = 3
@@ -335,47 +335,47 @@ function Invoke-TelethonAuth {
             python /app/scripts/auth.py
 
         if ($LASTEXITCODE -eq 0 -and (Test-Path $SessionFile)) {
-            Write-Ok "Telethon session đã tạo: $SessionFile"
+            Write-Ok "Telethon session created: $SessionFile"
             return
         }
-        Write-Warn "Auth fail. Thử lại? ($attempt/$maxAttempts)"
+        Write-Warn "Auth failed. Retry? ($attempt/$maxAttempts)"
         if ($attempt -lt $maxAttempts) { Start-Sleep -Seconds 2 }
     }
 
-    Abort 'ERR-DIST-003: Telethon auth fail.' 'Xem TROUBLESHOOTING.md §Auth.'
+    Abort 'ERR-DIST-003: Telethon auth failed.' 'See TROUBLESHOOTING.md §Auth.'
 }
 
 # ----- Step 12: Start container -----
 function Start-Container {
-    Write-Step '9/12 Khởi động container MentionMate'
+    Write-Step '9/12 Starting MentionMate container'
     & $Script:ComposeCmd[0] $Script:ComposeCmd[1..($Script:ComposeCmd.Length-1)] up -d
     if ($LASTEXITCODE -ne 0) {
-        Write-Err 'ERR-DIST-004: Container không start.'
+        Write-Err 'ERR-DIST-004: Container did not start.'
         & $Script:ComposeCmd[0] $Script:ComposeCmd[1..($Script:ComposeCmd.Length-1)] logs --tail 50
-        Abort 'Xem TROUBLESHOOTING.md §Container.'
+        Abort 'See TROUBLESHOOTING.md §Container.'
     }
     Start-Sleep -Seconds 3
-    Write-Ok "Container 'mentionmate' đang chạy."
+    Write-Ok "Container 'mentionmate' is running."
 }
 
 # ----- Step 13: Summary -----
 function Show-Summary {
-    Write-Step '10/12 Hoàn tất! 🎉'
+    Write-Step '10/12 Done! 🎉'
     $composeStr = $Script:ComposeCmd -join ' '
-    Write-Host "`nMentionMate đã được cài đặt thành công." -ForegroundColor Green
+    Write-Host "`nMentionMate has been installed successfully." -ForegroundColor Green
 
     Write-Host @"
 
-📝 Lệnh hữu ích:
-  Xem log:        $composeStr logs -f bot
-  Dừng:           $composeStr down
-  Khởi động lại:  $composeStr restart
-  Cập nhật:       .\update.ps1
+📝 Useful commands:
+  Tail logs:      $composeStr logs -f bot
+  Stop:           $composeStr down
+  Restart:        $composeStr restart
+  Update:         .\update.ps1
 
 📖 Documentation:  https://github.com/hoangp47/mentionmate
-🐛 Báo lỗi:        https://github.com/hoangp47/mentionmate/issues
+🐛 Report issues:  https://github.com/hoangp47/mentionmate/issues
 
-Bạn sẽ nhận alert trên Telegram khi có ai đó @$($Script:TG_MY_USERNAME) trong group có userbot tham gia.
+You will receive an alert on Telegram whenever someone @$($Script:TG_MY_USERNAME) mentions you in any group the userbot is a member of.
 "@
 }
 

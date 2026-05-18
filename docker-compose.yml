@@ -1,10 +1,10 @@
 # MentionMate — Telegram mention alert daemon
 # Docs: https://github.com/hoangp47/mentionmate
 #
-# User chỉ cần copy file này + .env (từ .env.example) + tạo thư mục ./data,
-# sau đó chạy: docker compose up -d
+# You only need this file + .env (from .env.example) + a ./data directory,
+# then run: docker compose up -d
 #
-# Wizard (./setup.sh hoặc setup.ps1) sẽ tự setup mọi thứ trên — không cần làm tay.
+# The wizard (./setup.sh or setup.ps1) configures all of the above for you.
 
 services:
   bot:
@@ -12,17 +12,17 @@ services:
     container_name: mentionmate
     restart: unless-stopped
 
-    # Cấu hình lấy từ .env (cùng thư mục với file compose này).
-    # Tuyệt đối KHÔNG commit .env lên git.
+    # Configuration loaded from .env (same directory as this compose file).
+    # NEVER commit .env to git.
     env_file: .env
 
-    # Mount thư mục ./data để session Telethon persist qua restart/update.
-    # KHÔNG xoá thư mục này nếu không muốn phải re-auth.
+    # Mount the ./data directory so the Telethon session persists across restart/update.
+    # DO NOT delete this directory unless you want to re-authenticate.
     volumes:
       - ./data:/app/data
 
-    # Healthcheck: verify python main.py còn sống.
-    # Phase Hardening sẽ upgrade lên HTTP /healthz endpoint.
+    # Healthcheck: verify python main.py is alive.
+    # The hardening phase will upgrade this to an HTTP /healthz endpoint.
     healthcheck:
       test: ["CMD-SHELL", "pgrep -f 'python.*main.py' > /dev/null || exit 1"]
       interval: 30s
@@ -30,8 +30,8 @@ services:
       retries: 3
       start_period: 10s
 
-    # Resource limit để không OOM máy user (đặc biệt laptop cá nhân).
-    # Quan sát thực tế: ~50MB RAM idle, peak ~120MB. 256MB là buffer thoải mái.
+    # Resource limits to avoid OOM on user machines (especially personal laptops).
+    # Observed in practice: ~50 MB idle, ~120 MB peak. 256 MB leaves comfortable headroom.
     deploy:
       resources:
         limits:
@@ -40,7 +40,7 @@ services:
         reservations:
           memory: 64M
 
-    # Logging: cap 10MB per file, 3 files = max 30MB log trên máy user.
+    # Logging: 10 MB per file, 3 files retained = max 30 MB on disk.
     logging:
       driver: json-file
       options:

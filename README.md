@@ -6,44 +6,44 @@
 ![Docker](https://img.shields.io/badge/docker-multi--arch-2496ED)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-**MentionMate** là 1 daemon nhỏ chạy trên máy bạn, lắng nghe các group Telegram mà bạn tham gia, và gửi **push notification riêng** mỗi khi có ai đó @mention bạn — kể cả khi notification của group đã bị mute.
+**MentionMate** is a lightweight daemon that runs on your machine, listens to your Telegram groups, and sends a **dedicated push notification** every time someone @mentions you — even if the group itself is muted.
 
-Sinh ra cho dân DevOps/PM hay bị add vào nhiều group dự án và dễ miss công việc, nhưng phù hợp cho bất kỳ ai dùng Telegram nhiều cho công việc.
+Built for DevOps engineers and product managers who get pulled into dozens of project groups, but useful for anyone who relies on Telegram for work.
 
-> _Ảnh demo / GIF sẽ được bổ sung sau pilot._
+> _Demo screenshot / GIF will be added after pilot._
 
 ---
 
-## Tại sao cần MentionMate?
+## Why MentionMate?
 
-| Vấn đề thực tế | MentionMate giải quyết thế nào |
+| Problem | How MentionMate helps |
 |---|---|
-| Bị add vào 10+ group Telegram dự án, mute hết để tập trung làm việc | Vẫn nghe được khi có người gọi tên mình |
-| Miss mention vì group quá nhiều tin nhắn | Tool quote lại đúng message kèm link nhảy thẳng tới |
-| Nhiều keyword cần theo dõi (tên dự án, tên team) | _Phase 2 sẽ thêm multi-keyword_ |
-| Không muốn cài app thứ 3 trên điện thoại | Tool chạy nền, alert qua chính Telegram |
+| Added to 10+ project groups; mute everything to focus | Still get notified when someone calls your name |
+| Miss mentions in noisy groups | Tool quotes the message and includes a jump link |
+| Need to track multiple keywords (project names, team names) | _Multi-keyword support coming in Phase 2_ |
+| Don't want yet another mobile app | Runs in the background; alerts arrive through Telegram itself |
 
 ---
 
-## Cài đặt nhanh
+## Quick install
 
 **Prerequisites:**
-- Docker runtime (Docker Engine / Desktop / Colima / Podman) đang chạy
-- Internet truy cập được `api.telegram.org` và `ghcr.io`
-- 1 account Telegram cá nhân
-- 5-15 phút thời gian
+- A running Docker runtime (Docker Engine / Desktop / Colima / Podman)
+- Internet access to `api.telegram.org` and `ghcr.io`
+- A personal Telegram account
+- 5–15 minutes
 
-### 1. Tạo Telegram credentials
+### 1. Prepare Telegram credentials
 
-Trước khi chạy wizard, chuẩn bị 3 thứ:
+Before running the wizard, gather three things:
 
-1. **API_ID + API_HASH:** vào https://my.telegram.org/apps → đăng nhập SĐT → bấm *"API development tools"* → *"Create new application"*. Copy 2 giá trị này.
-2. **Bot Token:** chat với [@BotFather](https://t.me/BotFather) → gõ `/newbot` → đặt tên + username → BotFather trả về token dạng `1234567890:AAAA...`.
-3. **Username của bạn:** username Telegram (không có @).
+1. **API_ID and API_HASH:** go to https://my.telegram.org/apps → sign in with your phone number → click *"API development tools"* → *"Create new application"*. Copy both values.
+2. **Bot Token:** chat with [@BotFather](https://t.me/BotFather) → send `/newbot` → choose a name and username → BotFather returns a token like `1234567890:AAAA...`.
+3. **Your username:** your Telegram username (without the `@`).
 
-### 2. Tải release + chạy wizard
+### 2. Download the release and run the wizard
 
-Tải file `mentionmate-v0.x.y.zip` từ [Releases page](https://github.com/hoangp47/mentionmate/releases), giải nén, mở terminal trong thư mục, chạy:
+Download `mentionmate-v0.x.y.zip` from the [Releases page](https://github.com/hoangp47/mentionmate/releases), unzip it, open a terminal in the extracted folder, and run:
 
 **Linux / macOS:**
 ```bash
@@ -55,99 +55,99 @@ Tải file `mentionmate-v0.x.y.zip` từ [Releases page](https://github.com/hoan
 .\setup.ps1
 ```
 
-> Nếu PowerShell chặn: `powershell -ExecutionPolicy Bypass -File setup.ps1`
+> If PowerShell blocks the script: `powershell -ExecutionPolicy Bypass -File setup.ps1`
 
-Wizard sẽ tự động:
-1. Kiểm tra Docker đang chạy
-2. Hỏi 4 thông tin Telegram (có validation real-time)
-3. Pull image multi-arch từ ghcr.io
-4. Tự phát hiện `chat_id` đích bằng cách yêu cầu bạn `/start` cho bot
-5. Gửi test message để xác nhận đúng chat
-6. Yêu cầu đăng nhập userbot Telegram (SĐT + OTP + 2FA nếu có)
-7. Khởi động container và in summary
+The wizard automatically:
+1. Verifies Docker is running
+2. Prompts for the 4 Telegram values (with real-time validation)
+3. Pulls the multi-arch image from ghcr.io
+4. Discovers your alert `chat_id` by asking you to `/start` the bot
+5. Sends a test message to confirm the right chat
+6. Walks you through Telethon userbot login (phone + OTP + 2FA if enabled)
+7. Starts the container and prints a summary
 
-Tổng thời gian: **~10-15 phút** (tech) / **~20-30 phút** (lần đầu chưa quen Telegram API).
+Total time: **~10–15 minutes** for technical users, **~20–30 minutes** the first time if you're new to the Telegram API.
 
 ### 3. Verify
 
-Sau khi wizard xong, từ 1 account khác hoặc bạn nhờ đồng nghiệp gửi tin nhắn `@username_của_bạn` trong 1 group bạn đang tham gia → bạn sẽ nhận alert qua bot vừa cài.
+After the wizard completes, ask someone (or a second account) to `@your_username` in any group you're a member of. Within seconds, the bot you just configured will DM you the alert.
 
 ---
 
-## Lệnh thường dùng
+## Common commands
 
 ```bash
-# Xem log live
+# Tail live logs
 docker compose logs -f bot
 
-# Dừng tạm
+# Stop
 docker compose down
 
-# Khởi động lại
+# Restart
 docker compose restart
 
-# Cập nhật lên phiên bản mới
-./update.sh     # hoặc .\update.ps1 trên Windows
+# Upgrade to the latest version
+./update.sh     # or .\update.ps1 on Windows
 ```
 
 ---
 
 ## Documentation
 
-- 📖 **[SETUP.md](docs/SETUP.md)** — Hướng dẫn cài đặt từng bước có screenshot
-- 🔧 **[TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** — Lỗi thường gặp và cách fix
+- 📖 **[SETUP.md](docs/SETUP.md)** — Step-by-step install guide with screenshots
+- 🔧 **[TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** — Common issues and fixes
 - 📝 **[CHANGELOG.md](CHANGELOG.md)** — Version history
 - 🏗️ **[Architecture](.vsaf/docs/srs/SRS-tele-FR-DIST-distribution-v1.0.md)** — Technical design
 
 ---
 
-## Cảnh báo bảo mật
+## Security notice
 
-⚠️ **MentionMate sử dụng tài khoản Telegram CÁ NHÂN của bạn** thông qua Telethon userbot để đọc message group. Điều này có nghĩa là:
+⚠️ **MentionMate uses your personal Telegram account** through a Telethon userbot to read group messages. That means:
 
-- Tool có quyền truy cập **TẤT CẢ** tin nhắn của bạn trên Telegram, bao gồm cả tin nhắn riêng tư.
-- Tool chỉ phân tích message để tìm mention, **không lưu** nội dung tin nhắn ra ngoài máy bạn.
-- File session (`data/mentions_session.session`) **tương đương credential** — không chia sẻ, không backup ra cloud.
-- Khi nghỉ việc hoặc đổi máy: **revoke** session qua Telegram → Settings → Devices.
-- Bạn tự chịu trách nhiệm về việc tuân thủ TOS Telegram + chính sách bảo mật thông tin của tổ chức.
+- The tool has access to **all** of your Telegram messages, including private chats.
+- It only inspects messages to detect mentions; it **does not store** message content outside your machine.
+- The session file (`data/mentions_session.session`) is **equivalent to a credential** — never share it or back it up to cloud services.
+- When you leave your job or switch machines: **revoke** the session via Telegram → Settings → Devices.
+- You are responsible for complying with Telegram's ToS and your organization's data-handling policies.
 
-Nếu bạn làm việc cho công ty có chính sách nghiêm về việc xử lý dữ liệu, hãy kiểm tra với phòng an toàn thông tin trước khi cài.
+If your employer has strict data-handling policies, check with your information-security team before installing.
 
 ---
 
-## Kiến trúc tóm tắt
+## Architecture at a glance
 
 ```
-Telegram group ──► Telethon userbot (đọc messages)
+Telegram group ──► Telethon userbot (reads messages)
                         │
-                        │ phát hiện @mention
+                        │ detects @mention
                         ▼
-                  Telegram Bot HTTP API (gửi alert)
+                  Telegram Bot HTTP API (sends alert)
                         │
                         ▼
-                  Push notification → bạn
+                  Push notification → you
 ```
 
-**Tại sao hybrid 2 client?** Userbot không thể gửi tin nhắn cho chính mình mà trigger push notification (Telegram silent self-message). Bot Telegram thì có thể gửi tin nhắn cho user (sau khi user đã `/start` với bot). → Userbot đọc + Bot gửi.
+**Why two clients?** A userbot cannot send a message to itself in a way that triggers a push notification (Telegram silently delivers self-messages). A bot, on the other hand, can DM a user (once the user has `/start`ed the bot). So: userbot reads, bot sends.
 
 ---
 
 ## Roadmap
 
-| Phase | Mục tiêu | Trạng thái |
+| Phase | Goal | Status |
 |---|---|---|
 | **Phase 0** | Security hotfix (revoke leaked token, purge git history) | 🔴 Required before public release |
-| **Phase 1** | Hardening (logging, health endpoint, retry, tests) | ⏭️ Planned |
-| **Phase 2** | Productization (this release) — distribution + wizard + docs | 🟡 In progress |
+| **Phase 1** | Hardening (structured logging, health endpoint, retries, tests) | ⏭️ Planned |
+| **Phase 2** | Productization (this release) — distribution, wizard, docs | 🟡 In progress |
 | **Phase 3** | Feature expansion (multi-keyword, digest, action buttons, web UI) | ⏭️ Planned |
 
-Full roadmap: see [internal roadmap document](.vsaf/docs/planning-artifacts/prd-distribution.md).
+Full roadmap: see the [internal roadmap document](.vsaf/docs/planning-artifacts/prd-distribution.md).
 
 ---
 
-## Đóng góp / Báo lỗi
+## Contribute / report issues
 
-- 🐛 Bug / feature request: [GitHub Issues](https://github.com/hoangp47/mentionmate/issues)
+- 🐛 Bug or feature request: [GitHub Issues](https://github.com/hoangp47/mentionmate/issues)
 - 💬 Discussion: TBD
 
 ---

@@ -1,10 +1,10 @@
 # Troubleshooting — MentionMate
 
-Tổng hợp lỗi thường gặp và cách fix. Nếu vẫn không giải quyết được, mở [issue trên GitHub](https://github.com/hoangp47/mentionmate/issues) kèm full log + version.
+Common problems and fixes. If your issue isn't listed, open a [GitHub issue](https://github.com/hoangp47/mentionmate/issues) with full logs and the version you're running.
 
 ---
 
-## Mục lục
+## Table of contents
 
 1. [Wizard / Setup](#wizard--setup)
 2. [Network](#network)
@@ -12,182 +12,182 @@ Tổng hợp lỗi thường gặp và cách fix. Nếu vẫn không giải quy�
 4. [chat_id](#chat_id)
 5. [Container](#container)
 6. [Update](#update)
-7. [Không nhận alert](#không-nhận-alert)
+7. [No alerts received](#no-alerts-received)
 8. [Windows](#windows)
 9. [macOS](#macos)
-10. [Debugging tổng quát](#debugging-tổng-quát)
+10. [General debugging](#general-debugging)
 
 ---
 
 ## Wizard / Setup
 
-### ❌ `ERR-DIST-001: Docker daemon chưa chạy.`
+### ❌ `ERR-DIST-001: Docker daemon not running.`
 
-**Lý do:** wizard chạy `docker info` nhưng exit non-zero — Docker chưa được start.
+**Cause:** the wizard ran `docker info` and it returned non-zero — Docker hasn't been started.
 
 **Fix:**
-- **Linux:** `sudo systemctl start docker` (nếu dùng systemd). Verify: `docker info`.
-- **macOS Colima:** `colima start`. Verify: `colima status`.
-- **macOS Docker Desktop:** Mở app từ Applications. Đợi icon ở menu bar chuyển sang xanh.
-- **Windows Docker Desktop:** Mở app từ Start Menu. Đợi 30-60s init.
-- **Windows WSL2:** Vào terminal WSL, chạy `sudo service docker start`.
+- **Linux:** `sudo systemctl start docker` (systemd-based distros). Verify with `docker info`.
+- **macOS Colima:** `colima start`. Verify with `colima status`.
+- **macOS Docker Desktop:** open the app from Applications. Wait for the menu-bar icon to turn green.
+- **Windows Docker Desktop:** open the app from the Start menu. Wait 30–60 s for it to initialize.
+- **Windows WSL2:** in the WSL terminal, `sudo service docker start`.
 - **Podman:** `podman machine start`.
 
-### ❌ `ERR-DIST-001: Không tìm thấy 'docker'.`
+### ❌ `ERR-DIST-001: Docker CLI not found.`
 
-Docker CLI chưa cài hoặc không trong PATH.
+Docker CLI isn't installed or isn't on `PATH`.
 
-**Fix:** Xem [SETUP.md §Bước 1](SETUP.md#bước-1-cài-docker-runtime-nếu-chưa-có).
+**Fix:** see [SETUP.md §Step 1](SETUP.md#step-1--install-a-docker-runtime-skip-if-you-already-have-one).
 
-### ⚠️ `Chỉ có docker-compose v1 (legacy)`
+### ⚠️ `Only docker-compose v1 (legacy) is available`
 
-Bạn đang dùng `docker-compose` v1 (gạch nối, Python-based). Wizard sẽ fallback nhưng v1 đã deprecated từ 2023.
+You're running `docker-compose` v1 (hyphenated, Python-based). The wizard will fall back, but v1 was deprecated in 2023.
 
-**Fix khuyên dùng:** Upgrade Docker Engine/Desktop lên version có compose v2 bundled (Docker 20.10+).
+**Recommended fix:** upgrade Docker Engine/Desktop to a version that bundles Compose v2 (Docker 20.10+).
 
-### Wizard hỏi `Ghi đè cấu hình cũ? (y/N)` — chọn gì?
+### Wizard asks `Overwrite existing config? (y/N)` — what should I choose?
 
-- Chọn **N** nếu bạn đã setup trước và muốn giữ nguyên.
-- Chọn **Y** nếu bạn muốn nhập lại từ đầu (vd token cũ đã revoke). **Lưu ý:** session file vẫn được giữ — chỉ `.env` bị ghi đè. Nếu muốn xoá hết thì xoá thủ công `data/mentions_session.session` trước khi chạy wizard.
+- Choose **N** if you've already set things up and want to keep your configuration.
+- Choose **Y** if you want to re-enter everything (e.g. you revoked the old token). **Note:** only `.env` is overwritten; the session file is preserved. If you want a clean slate, manually delete `data/mentions_session.session` before running the wizard.
 
 ---
 
 ## Network
 
-### ❌ `ERR-DIST-002: Pull image fail.`
+### ❌ `ERR-DIST-002: Image pull failed.`
 
-Wizard không pull được từ `ghcr.io/hoangp47/mentionmate`.
+The wizard could not pull from `ghcr.io/hoangp47/mentionmate`.
 
-**Chẩn đoán:**
+**Diagnose:**
 ```bash
 # Test connectivity
 curl -I https://ghcr.io
 curl -I https://api.telegram.org
 ```
 
-**Nguyên nhân thường gặp:**
+**Common causes:**
 
-1. **Mạng công ty chặn ghcr.io / GitHub:**
-   - Test: `curl -I https://ghcr.io` → 4xx/5xx hoặc timeout
-   - Fix: dùng wifi cá nhân, 4G hotspot, hoặc xin IT mở firewall.
+1. **Corporate network blocks ghcr.io / GitHub:**
+   - Test: `curl -I https://ghcr.io` returns 4xx/5xx or times out.
+   - Fix: use personal Wi-Fi, a 4G hotspot, or ask IT to open the firewall.
 
-2. **DNS không resolve:**
+2. **DNS resolution failure:**
    - Test: `nslookup ghcr.io`
-   - Fix: đổi DNS sang 8.8.8.8 hoặc 1.1.1.1 tạm thời.
+   - Fix: temporarily switch to 8.8.8.8 or 1.1.1.1.
 
-3. **Proxy nội bộ:**
+3. **Corporate proxy:**
    - Set env: `export HTTPS_PROXY=http://proxy.viettel.com.vn:8080`
-   - Set proxy cho Docker: chỉnh `~/.docker/config.json` hoặc Docker Desktop settings.
+   - Configure proxy for Docker: edit `~/.docker/config.json` or Docker Desktop settings.
 
 4. **GitHub rate limit (anonymous pull):**
-   - Hiếm gặp với ghcr.io. Nếu vẫn xảy ra, login GitHub: `docker login ghcr.io -u <username>`
+   - Rare with ghcr.io. If it happens, log in: `docker login ghcr.io -u <username>`.
 
-### Wizard treo ở `Đang gọi getUpdates ...`
+### Wizard hangs at `Calling getUpdates ...`
 
-Telegram API timeout (mặc định 10s trong wizard).
+Telegram API timed out (default is 10 s in the wizard).
 
 **Fix:**
-- Verify mạng tới `api.telegram.org`: `curl -I https://api.telegram.org`
-- Nếu mạng OK nhưng API trả slow → thử lại sau vài phút.
-- Nếu Viettel intranet chặn Telegram → tool **không chạy được trên mạng đó**. Dùng 4G hoặc mạng cá nhân.
+- Verify connectivity to `api.telegram.org`: `curl -I https://api.telegram.org`.
+- If the network is fine but the API is slow, retry after a few minutes.
+- If the Viettel intranet blocks Telegram, the tool **cannot run on that network**. Use 4G or a personal network.
 
 ---
 
 ## Auth (Telethon login)
 
-### ❌ `ERR-DIST-003: Telethon auth fail sau 3 lần.`
+### ❌ `ERR-DIST-003: Telethon auth failed after 3 attempts.`
 
-Telethon từ chối login userbot.
+Telethon refused to log in the userbot.
 
-**Nguyên nhân:**
+**Causes:**
 
-1. **Nhập sai OTP** — Telegram gửi mã sai vị trí (vào Telegram app khác). Kiểm tra app Telegram trên điện thoại bạn → check chat "Telegram" (account chính thức).
-2. **2FA password sai** — đây là password riêng bạn đặt ở Telegram Settings → Privacy & Security → Two-Step Verification.
-3. **Telegram tạm khoá account** — quá nhiều login fail. Đợi 1-24h rồi thử lại.
-4. **SĐT format sai** — phải kèm mã quốc gia: `+84912345678` (KHÔNG dấu cách, KHÔNG ngoặc).
+1. **Wrong OTP** — Telegram delivers the code to a different app/device. Check the "Telegram" official chat on your phone.
+2. **Wrong 2FA password** — this is the password you set in Telegram Settings → Privacy & Security → Two-Step Verification.
+3. **Account temporarily locked** — too many failed logins. Wait 1–24 h and retry.
+4. **Wrong phone-number format** — must include the country code: `+84912345678` (no spaces, no parentheses).
 
 **Fix:**
-- Chạy lại `./setup.sh` (wizard sẽ detect session đã có và skip nếu auth trước đó success).
-- Nếu vẫn fail: xoá `data/mentions_session.session*` rồi chạy lại.
+- Re-run `./setup.sh` (the wizard detects an existing session and skips auth if it previously succeeded).
+- If it still fails: delete `data/mentions_session.session*` and re-run.
 
-### Telethon prompt "Please enter your password (8 chars or more):"
+### Telethon prompts "Please enter your password (8 chars or more):"
 
-Account của bạn có 2FA. Nhập password bạn đã set ở Telegram Settings → Two-Step Verification.
+Your account has 2FA enabled. Enter the password you configured in Telegram Settings → Two-Step Verification.
 
-Nếu **quên password 2FA**: vào Telegram app → Settings → Two-Step Verification → "Forgot password" → reset qua email (nếu đã set email recovery) hoặc disable 2FA tạm thời.
+If you've **forgotten the 2FA password**: open the Telegram app → Settings → Two-Step Verification → "Forgot password" → reset via email (if you set up recovery email) or disable 2FA temporarily.
 
 ### `AuthKeyDuplicatedError`
 
-Telethon session đang được dùng trên nhiều máy đồng thời.
+The Telethon session is being used on multiple machines simultaneously.
 
-**Fix:** Xoá session file cũ, chạy lại setup:
+**Fix:** remove the old session file and re-run setup:
 ```bash
 rm data/mentions_session.session
 ./setup.sh
 ```
 
-> ⚠️ **Quy tắc:** 1 session = 1 máy. Không copy session file giữa máy.
+> ⚠️ **Rule of thumb:** one session per machine. Don't copy the session file between hosts.
 
 ---
 
 ## chat_id
 
-### ❌ `Không phát hiện được chat_id sau 3 lần thử.`
+### ❌ `Could not detect chat_id after 3 attempts.`
 
-Wizard gọi `getUpdates` của bot nhưng không tìm thấy message `/start` nào.
+The wizard called the bot's `getUpdates` endpoint but found no `/start` message.
 
-**Nguyên nhân:**
+**Causes:**
 
-1. **Bạn gửi `/start` cho SAI bot** — wizard hiển thị username bot đúng. Verify đã gửi cho bot đó.
-2. **Bot token sai** — wizard sẽ sai khi gọi getMe. Kiểm tra lại token từ BotFather.
-3. **Update đã bị consume** — Telegram getUpdates chỉ trả các update CHƯA được consume. Nếu wizard gọi 2 lần thì lần 2 không thấy nữa. Fix: gửi `/start` lại trước mỗi attempt.
-4. **Bot bị Telegram tạm dừng** — hiếm. Tạo bot mới qua BotFather.
+1. **You sent `/start` to the wrong bot** — the wizard prints the correct bot username. Verify you messaged that one.
+2. **Wrong bot token** — the wizard's `getMe` call would also fail. Double-check the token from BotFather.
+3. **Update was already consumed** — `getUpdates` only returns unread updates. Re-calling the wizard skips already-read ones. Fix: send `/start` again before each attempt.
+4. **Bot was suspended by Telegram** — rare. Create a new bot via BotFather.
 
-**Debug thủ công:**
+**Manual debug:**
 ```bash
-# Replace TOKEN với bot token thực
+# Replace TOKEN with your real bot token
 curl -s "https://api.telegram.org/botTOKEN/getMe"
 curl -s "https://api.telegram.org/botTOKEN/getUpdates"
 ```
-Tìm `"chat":{"id":XXX, ...}` — số đó là chat_id.
+Look for `"chat":{"id":XXX, ...}` — that number is your chat_id.
 
-### Wizard gửi test message nhưng tôi không nhận
+### Wizard sent the test message but I didn't receive it
 
-- Verify wizard in **"chat_id: <số>"** đúng. Số dương = DM, số âm = group.
-- Verify mở **đúng bot** trên Telegram (đôi khi 2 bot tên giống nhau).
-- Thử gửi `/start` lại cho bot, đảm bảo conversation open.
+- Confirm the wizard printed the correct **chat_id** (positive = DM, negative = group).
+- Confirm you're looking at **the right bot** in Telegram (similar names can be confusing).
+- Try `/start` again to make sure the conversation is open.
 
 ---
 
 ## Container
 
-### ❌ `ERR-DIST-004: Container không khởi động được.`
+### ❌ `ERR-DIST-004: Container failed to start.`
 
-Wizard chạy `docker compose up -d` nhưng container fail.
+`docker compose up -d` ran but the container is unhealthy.
 
 **Debug:**
 ```bash
 docker compose logs --tail 100 bot
 ```
 
-**Nguyên nhân thường gặp:**
+**Common causes:**
 
-1. **Image không pull được** → xem [Network](#network).
-2. **`.env` thiếu hoặc sai format** → mở `.env` check 5 dòng env vars.
-3. **Session file permission sai** → `chmod 600 data/mentions_session.session`.
-4. **Port conflict** → MentionMate không expose port; không thể vướng port conflict. Nếu log báo port → có thể là image lỗi, retry pull.
+1. **Image could not be pulled** → see [Network](#network).
+2. **`.env` is missing or malformed** → open `.env` and verify all 5 env vars.
+3. **Wrong session-file permissions** → `chmod 600 data/mentions_session.session`.
+4. **Port conflict** → MentionMate doesn't expose ports, so this shouldn't happen. If the log mentions a port issue, the image may be corrupt; re-pull.
 
-### Container start nhưng `restarting (1)` liên tục
+### Container starts but enters `restarting (1)` loop
 
-Tool crash ngay sau start. Xem log:
+The tool crashes immediately after startup. Inspect the log:
 ```bash
 docker compose logs bot
 ```
 
-Tìm dòng có "Error" hoặc "Exception". Lỗi phổ biến:
-- `AuthKeyDuplicatedError` → xem [Auth](#auth-telethon-login)
-- `ConnectionError` / `OSError: Network is unreachable` → xem [Network](#network)
-- `KeyError: 'TG_API_ID'` → `.env` chưa load. Verify `env_file: .env` trong docker-compose.yml.
+Look for lines containing "Error" or "Exception". Common errors:
+- `AuthKeyDuplicatedError` → see [Auth](#auth-telethon-login).
+- `ConnectionError` / `OSError: Network is unreachable` → see [Network](#network).
+- `KeyError: 'TG_API_ID'` → `.env` wasn't loaded. Verify `env_file: .env` in `docker-compose.yml`.
 
 ### Container health = `unhealthy`
 
@@ -195,15 +195,15 @@ Tìm dòng có "Error" hoặc "Exception". Lỗi phổ biến:
 docker inspect mentionmate --format '{{.State.Health.Status}}'
 ```
 
-`pgrep` không tìm thấy `python main.py`. Container đang restart hoặc đã crash. Xem log.
+`pgrep` cannot find `python main.py`. The container is either restarting or has crashed. Check the logs.
 
 ---
 
 ## Update
 
-### ❌ `ERR-DIST-006: Container không pick up image mới.`
+### ❌ `ERR-DIST-006: Container did not pick up the new image.`
 
-Sau `update.sh`, container vẫn dùng image cũ.
+After running `update.sh`, the container is still on the old image.
 
 **Fix:**
 ```bash
@@ -212,79 +212,79 @@ docker compose pull
 docker compose up -d --force-recreate
 ```
 
-### Update mất session file
+### Update lost my session file
 
-`update.sh` **không** xoá session. Nếu session bị mất sau update:
-1. Verify volume mount: `docker compose config | grep volumes`
-2. Check thư mục `./data` còn không.
-3. Khôi phục từ backup `data/mentions_session.backup.*` nếu có.
+`update.sh` does **not** remove the session. If the session file disappears after an update:
+1. Verify the volume mount: `docker compose config | grep volumes`.
+2. Check that the `./data` directory still exists.
+3. Restore from backup `data/mentions_session.backup.*` if available.
 
 ---
 
-## Không nhận alert
+## No alerts received
 
-Container running OK, nhưng không nhận alert khi có người mention.
+The container is running, but no alerts arrive when someone @mentions you.
 
 **Checklist:**
 
-1. **Container đang chạy:** `docker compose ps` → status `Up`.
-2. **Userbot đã connect:** `docker compose logs bot | grep "Đang chạy"` → phải thấy "✅ Đang chạy: userbot lắng nghe..."
-3. **`@username` đúng:** kiểm tra `.env` → `TG_MY_USERNAME=` phải khớp username Telegram của bạn (không có @).
-4. **Group có bot:** userbot phải là member của group đó. Tool KHÔNG nhận được alert từ group bạn không tham gia.
-5. **Mention thật sự là @mention:** Telegram `@username` thật (autocomplete khi gõ @) khác với gõ tay `@`. Test bằng cách paste exact `@username` vào tin nhắn.
-6. **Chat_id đúng:** `.env` → `TG_ALERT_CHAT_ID=` phải là chat DM giữa bạn và bot. Nếu wizard set sai, chạy lại setup.
-7. **Test thử:** từ 1 account khác, gửi `@username_bạn` trong 1 group → check log: `docker compose logs -f bot`.
+1. **Container is running:** `docker compose ps` → status `Up`.
+2. **Userbot is connected:** `docker compose logs bot | grep "Running"` → you should see "✅ Running: userbot listening...".
+3. **`@username` matches:** check `.env` → `TG_MY_USERNAME=` must equal your Telegram username (no `@`).
+4. **You're in the group:** the userbot only sees groups that **you** are a member of. The tool does not receive alerts from groups you haven't joined.
+5. **It's a real `@mention`:** Telegram's `@username` (the autocomplete one) differs from a plain typed `@`. Test by pasting the exact `@username` into the message.
+6. **chat_id is correct:** `.env` → `TG_ALERT_CHAT_ID=` must be the DM chat between you and the bot. If the wizard saved the wrong value, re-run setup.
+7. **Live test:** from a second account, send `@your_username` in a group → check the log: `docker compose logs -f bot`.
 
 ---
 
 ## Windows
 
-### ❌ `ERR-DIST-005: PowerShell đang chặn script chưa sign.`
+### ❌ `ERR-DIST-005: PowerShell is blocking unsigned scripts.`
 
-ExecutionPolicy = Restricted.
+ExecutionPolicy is set to `Restricted`.
 
-**Fix tạm:**
+**Temporary fix:**
 ```powershell
 powershell -ExecutionPolicy Bypass -File setup.ps1
 ```
 
-**Fix bền:**
+**Persistent fix:**
 ```powershell
 Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
-# Hoặc cho 1 session:
+# Or for a single session:
 Set-ExecutionPolicy -Scope Process Bypass
 ```
 
-> ⚠️ Một số tổ chức (vd Viettel) có Group Policy chặn cả `Bypass`. Liên hệ IT.
+> ⚠️ Some organizations (e.g. Viettel) have Group Policy that blocks even `Bypass`. Contact IT.
 
-### Wizard treo ở "Telethon auth"
+### Wizard hangs during "Telethon auth"
 
-`docker run --rm -it` cần TTY. PowerShell trong VSCode integrated terminal **không có TTY** → treo.
+`docker run --rm -it` requires a TTY. PowerShell inside VS Code's integrated terminal **does not provide a TTY** → the wizard hangs.
 
-**Fix:** Chạy `setup.ps1` trong PowerShell terminal độc lập (Windows Terminal, hoặc cmd.exe → powershell).
+**Fix:** run `setup.ps1` in a standalone PowerShell terminal (Windows Terminal, or `cmd.exe` → `powershell`).
 
 ### `docker: 'compose' is not a docker command.`
 
-Bạn đang dùng docker-compose v1 standalone. Wizard sẽ fallback. Khuyên upgrade Docker Desktop.
+You're on the standalone `docker-compose` v1. The wizard will fall back. Upgrade Docker Desktop to get Compose v2.
 
 ---
 
 ## macOS
 
-### `docker info` báo error sau khi `colima start`
+### `docker info` errors right after `colima start`
 
-Đợi 5-10s cho Colima init. Verify: `colima status` → "Running".
+Give Colima 5–10 seconds to finish initializing. Verify with `colima status` → "Running".
 
-### M1/M2/M3 Mac — image chạy chậm
+### Apple Silicon (M1/M2/M3) — image runs slowly
 
-Khả năng image đang chạy linux/amd64 qua Rosetta thay vì arm64 native.
+The image may be running as linux/amd64 via Rosetta instead of native arm64.
 
 **Verify:**
 ```bash
 docker inspect mentionmate --format '{{.Architecture}}'
 ```
 
-Phải là `arm64`. Nếu `amd64` → pull lại:
+It should be `arm64`. If it's `amd64`, re-pull with the correct platform:
 ```bash
 docker pull --platform linux/arm64 ghcr.io/hoangp47/mentionmate:latest
 docker compose up -d --force-recreate
@@ -292,53 +292,53 @@ docker compose up -d --force-recreate
 
 ---
 
-## Debugging tổng quát
+## General debugging
 
-### Bật verbose mode trong wizard
+### Enable verbose mode in the wizard
 
 ```bash
 ./setup.sh -v
 ```
 
-In mọi docker command đang chạy → giúp identify command nào fail.
+Prints every Docker command as it runs — useful for identifying which step is failing.
 
-### Xem full log container
+### Get full container logs
 
 ```bash
 docker compose logs --tail 500 bot > debug.log
 ```
 
-### Check container resources
+### Inspect container resources
 
 ```bash
 docker stats mentionmate
 ```
 
-Bình thường: RAM ~50-120MB, CPU < 5%.
+Typical usage: ~50–120 MB RAM, < 5 % CPU.
 
-### Reset toàn bộ
+### Full reset
 
 ```bash
 docker compose down
 rm -rf data .env
-./setup.sh   # cài lại từ đầu
+./setup.sh   # reinstall from scratch
 ```
 
-> ⚠️ **Cảnh báo:** xoá `data/` = mất session, phải re-auth Telethon (cần SĐT + OTP + 2FA lại).
+> ⚠️ **Warning:** removing `data/` destroys the Telethon session. You'll need to re-authenticate (phone + OTP + 2FA) on the next run.
 
 ---
 
-## Báo lỗi mới
+## Report a new issue
 
-Nếu lỗi của bạn không trong danh sách trên, mở [GitHub issue](https://github.com/hoangp47/mentionmate/issues/new) với:
+If your problem isn't covered above, open a [GitHub issue](https://github.com/hoangp47/mentionmate/issues/new) with:
 
-1. **OS + version** (vd Ubuntu 22.04, Windows 11 22H2, macOS 13.5)
-2. **Docker version**: `docker version`
-3. **MentionMate version**: file `CHANGELOG.md` hoặc image tag
-4. **Bước nào trong wizard fail**
-5. **Full output** của wizard (paste vào issue, redact token/credential)
-6. **Container log** (`docker compose logs --tail 100 bot`)
+1. **OS and version** (e.g. Ubuntu 22.04, Windows 11 22H2, macOS 13.5).
+2. **Docker version:** `docker version`.
+3. **MentionMate version:** check `CHANGELOG.md` or the image tag.
+4. **Which wizard step failed.**
+5. **Full wizard output** (paste into the issue; redact any tokens or credentials).
+6. **Container log** (`docker compose logs --tail 100 bot`).
 
 ---
 
-*Bổ sung lỗi mới khi pilot phát hiện. Update theo PR.*
+*New issues are added as pilot users discover them. Update via PR.*
