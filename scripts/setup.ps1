@@ -1,5 +1,5 @@
 # MentionMate — Setup wizard for Windows (PowerShell 5.1+)
-# Docs: https://github.com/hoangp47/mentionmate
+# Docs: https://github.com/hoangp47/mention-mate
 #
 # Usage:
 #   .\setup.ps1
@@ -16,7 +16,7 @@ param(
 $ErrorActionPreference = 'Stop'
 
 # ----- Constants -----
-$IMAGE       = 'ghcr.io/hoangp47/mentionmate:latest'
+$IMAGE       = 'ghcr.io/hoangp47/mention-mate:latest'
 $EnvFile     = '.env'
 $DataDir     = '.\data'
 $SessionFile = Join-Path $DataDir 'mentions_session.session'
@@ -47,7 +47,7 @@ Usage:
 If blocked by ExecutionPolicy:
   powershell -ExecutionPolicy Bypass -File setup.ps1
 
-Documentation: https://github.com/hoangp47/mentionmate/blob/master/docs/SETUP.md
+Documentation: https://github.com/hoangp47/mention-mate/blob/master/docs/SETUP.md
 "@
     exit 0
 }
@@ -336,7 +336,7 @@ function Invoke-TelethonAuth {
             -v "${cwd}\data:/app/data" `
             --env-file $EnvFile `
             $IMAGE `
-            python -m mentionmate.auth
+            python -m mention_mate.auth
 
         if ($LASTEXITCODE -eq 0 -and (Test-Path $SessionFile)) {
             Write-Ok "Telethon session created: $SessionFile"
@@ -359,7 +359,7 @@ function Start-Container {
         Abort 'See TROUBLESHOOTING.md §Container.'
     }
     Start-Sleep -Seconds 3
-    Write-Ok "Container 'mentionmate' is running."
+    Write-Ok "Container 'mention-mate' is running."
 }
 
 # ----- Step 13: Summary -----
@@ -376,8 +376,8 @@ function Show-Summary {
   Restart:        $composeStr restart
   Update:         .\update.ps1
 
-📖 Documentation:  https://github.com/hoangp47/mentionmate
-🐛 Report issues:  https://github.com/hoangp47/mentionmate/issues
+📖 Documentation:  https://github.com/hoangp47/mention-mate
+🐛 Report issues:  https://github.com/hoangp47/mention-mate/issues
 
 You will receive an alert on Telegram whenever someone @$($Script:TG_MY_USERNAME) mentions you in any group the userbot is a member of.
 "@
@@ -388,7 +388,7 @@ Write-Host @"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    MentionMate Setup Wizard (Windows)
-   github.com/hoangp47/mentionmate
+   github.com/hoangp47/mention-mate
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 "@
 

@@ -19,7 +19,7 @@ RUN useradd -m -r -u 1001 tgbot
 
 WORKDIR /app
 
-# Copy installed packages (including mentionmate) from the builder stage
+# Copy installed packages (including mention-mate) from the builder stage
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
@@ -32,12 +32,12 @@ ENV HOME=/app
 # OCI image annotations — static labels; CI injects dynamic ones (version, revision, created)
 LABEL org.opencontainers.image.title="MentionMate" \
       org.opencontainers.image.description="Telegram mention alert daemon — never miss when your team @mentions you" \
-      org.opencontainers.image.source="https://github.com/hoangp47/mentionmate" \
+      org.opencontainers.image.source="https://github.com/hoangp47/mention-mate" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.authors="hoangp47"
 
 # Verify the Python entry process is alive. The hardening phase will replace this with an HTTP /healthz check.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD pgrep -f 'python.*mentionmate' > /dev/null || exit 1
+    CMD pgrep -f 'python.*mention_mate' > /dev/null || exit 1
 
-CMD ["python", "-m", "mentionmate"]
+CMD ["python", "-m", "mention_mate"]

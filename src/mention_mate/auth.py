@@ -2,7 +2,7 @@
 
 The wizard invokes this as:
     docker run --rm -it -v ./data:/app/data --env-file .env \\
-        ghcr.io/hoangp47/mentionmate:latest python -m mentionmate.auth
+        ghcr.io/hoangp47/mention-mate:latest python -m mention_mate.auth
 
 Telethon prompts for phone number, OTP, and 2FA password (if enabled),
 then saves the session to /app/data/mentions_session.session (mounted on host).

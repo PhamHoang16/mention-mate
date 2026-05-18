@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mentionmate"
+name = "mention-mate"
 version = "0.1.0"
 description = "Telegram mention alert daemon — never miss when your team @mentions you"
 readme = "README.md"
@@ -28,9 +28,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/hoangp47/mentionmate"
-Issues = "https://github.com/hoangp47/mentionmate/issues"
-Changelog = "https://github.com/hoangp47/mentionmate/blob/master/CHANGELOG.md"
+Homepage = "https://github.com/hoangp47/mention-mate"
+Issues = "https://github.com/hoangp47/mention-mate/issues"
+Changelog = "https://github.com/hoangp47/mention-mate/blob/master/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]

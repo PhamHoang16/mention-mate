@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # MentionMate — Setup wizard for Linux/macOS
-# Docs: https://github.com/hoangp47/mentionmate
+# Docs: https://github.com/hoangp47/mention-mate
 #
 # Usage: ./setup.sh
 # Verbose mode: ./setup.sh -v
@@ -8,7 +8,7 @@
 set -euo pipefail
 
 # ----- Constants -----
-readonly IMAGE="ghcr.io/hoangp47/mentionmate:latest"
+readonly IMAGE="ghcr.io/hoangp47/mention-mate:latest"
 readonly ENV_FILE=".env"
 readonly DATA_DIR="./data"
 readonly SESSION_FILE="${DATA_DIR}/mentions_session.session"
@@ -40,7 +40,7 @@ Usage:
   ./setup.sh -v        Run verbose (print every docker command)
   ./setup.sh -h        Show this help
 
-Documentation: https://github.com/hoangp47/mentionmate/blob/master/docs/SETUP.md
+Documentation: https://github.com/hoangp47/mention-mate/blob/master/docs/SETUP.md
 EOF
             exit 0
             ;;
@@ -317,7 +317,7 @@ telethon_auth() {
             -v "$(pwd)/${DATA_DIR}:/app/data" \
             --env-file "$ENV_FILE" \
             "$IMAGE" \
-            python -m mentionmate.auth; then
+            python -m mention_mate.auth; then
             log_ok "Telethon session created: $SESSION_FILE"
             chmod 600 "$SESSION_FILE" 2>/dev/null || true
             return 0
@@ -342,12 +342,12 @@ start_container() {
     fi
 
     sleep 3
-    if ! $COMPOSE_CMD ps --status running | grep -q mentionmate; then
+    if ! $COMPOSE_CMD ps --status running | grep -q mention-mate; then
         log_err "Container started but is not in 'running' state. Logs:"
         $COMPOSE_CMD logs --tail 50
         abort "See TROUBLESHOOTING.md §Container."
     fi
-    log_ok "Container 'mentionmate' is running."
+    log_ok "Container 'mention-mate' is running."
 }
 
 # ----- Step 13: Summary (FR-020) -----
@@ -363,8 +363,8 @@ ${C_GREEN}${C_BOLD}MentionMate has been installed successfully.${C_RESET}
   Restart:        ${C_BOLD}${COMPOSE_CMD} restart${C_RESET}
   Update:         ${C_BOLD}./update.sh${C_RESET}
 
-📖 Documentation:  https://github.com/hoangp47/mentionmate
-🐛 Report issues:  https://github.com/hoangp47/mentionmate/issues
+📖 Documentation:  https://github.com/hoangp47/mention-mate
+🐛 Report issues:  https://github.com/hoangp47/mention-mate/issues
 
 You will receive an alert on Telegram whenever someone @${TG_MY_USERNAME:-username} mentions you in any group the userbot is a member of.
 EOF
@@ -374,7 +374,7 @@ EOF
 main() {
     printf '%s\n' "${C_BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     printf '   MentionMate Setup Wizard (Linux/macOS)\n'
-    printf '   github.com/hoangp47/mentionmate\n'
+    printf '   github.com/hoangp47/mention-mate\n'
     printf '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━%s\n' "$C_RESET"
 
     check_docker

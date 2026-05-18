@@ -1,6 +1,6 @@
 # Troubleshooting — MentionMate
 
-Common problems and fixes. If your issue isn't listed, open a [GitHub issue](https://github.com/hoangp47/mentionmate/issues) with full logs and the version you're running.
+Common problems and fixes. If your issue isn't listed, open a [GitHub issue](https://github.com/hoangp47/mention-mate/issues) with full logs and the version you're running.
 
 ---
 
@@ -56,7 +56,7 @@ You're running `docker-compose` v1 (hyphenated, Python-based). The wizard will f
 
 ### ❌ `ERR-DIST-002: Image pull failed.`
 
-The wizard could not pull from `ghcr.io/hoangp47/mentionmate`.
+The wizard could not pull from `ghcr.io/hoangp47/mention-mate`.
 
 **Diagnose:**
 ```bash
@@ -192,10 +192,10 @@ Look for lines containing "Error" or "Exception". Common errors:
 ### Container health = `unhealthy`
 
 ```bash
-docker inspect mentionmate --format '{{.State.Health.Status}}'
+docker inspect mention-mate --format '{{.State.Health.Status}}'
 ```
 
-`pgrep` cannot find the `python -m mentionmate` process. The container is either restarting or has crashed. Check the logs.
+`pgrep` cannot find the `python -m mention_mate` process. The container is either restarting or has crashed. Check the logs.
 
 ---
 
@@ -281,12 +281,12 @@ The image may be running as linux/amd64 via Rosetta instead of native arm64.
 
 **Verify:**
 ```bash
-docker inspect mentionmate --format '{{.Architecture}}'
+docker inspect mention-mate --format '{{.Architecture}}'
 ```
 
 It should be `arm64`. If it's `amd64`, re-pull with the correct platform:
 ```bash
-docker pull --platform linux/arm64 ghcr.io/hoangp47/mentionmate:latest
+docker pull --platform linux/arm64 ghcr.io/hoangp47/mention-mate:latest
 docker compose up -d --force-recreate
 ```
 
@@ -311,7 +311,7 @@ docker compose logs --tail 500 bot > debug.log
 ### Inspect container resources
 
 ```bash
-docker stats mentionmate
+docker stats mention-mate
 ```
 
 Typical usage: ~50–120 MB RAM, < 5 % CPU.
@@ -330,7 +330,7 @@ rm -rf data .env
 
 ## Report a new issue
 
-If your problem isn't covered above, open a [GitHub issue](https://github.com/hoangp47/mentionmate/issues/new) with:
+If your problem isn't covered above, open a [GitHub issue](https://github.com/hoangp47/mention-mate/issues/new) with:
 
 1. **OS and version** (e.g. Ubuntu 22.04, Windows 11 22H2, macOS 13.5).
 2. **Docker version:** `docker version`.

@@ -13,7 +13,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}   # ví dụ: hoangp47/mentionmate
+  IMAGE_NAME: ${{ github.repository }}   # ví dụ: hoangp47/mention-mate
 
 jobs:
   release:
@@ -75,16 +75,16 @@ jobs:
         run: |
           set -euo pipefail
           TAG="${{ github.ref_name }}"
-          DIST_DIR="dist/mentionmate-${TAG}"
+          DIST_DIR="dist/mention-mate-${TAG}"
           mkdir -p "$DIST_DIR"
           cp docker-compose.yml .env.example README.md CHANGELOG.md "$DIST_DIR/"
           cp scripts/setup.sh scripts/setup.ps1 scripts/update.sh scripts/update.ps1 "$DIST_DIR/"
           chmod +x "$DIST_DIR"/*.sh
           cp -r docs "$DIST_DIR/" 2>/dev/null || mkdir -p "$DIST_DIR/docs"
           cd dist
-          zip -r "mentionmate-${TAG}.zip" "mentionmate-${TAG}"
-          echo "zip_path=dist/mentionmate-${TAG}.zip" >> "$GITHUB_OUTPUT"
-          echo "Created: dist/mentionmate-${TAG}.zip ($(du -h "mentionmate-${TAG}.zip" | cut -f1))"
+          zip -r "mention-mate-${TAG}.zip" "mention-mate-${TAG}"
+          echo "zip_path=dist/mention-mate-${TAG}.zip" >> "$GITHUB_OUTPUT"
+          echo "Created: dist/mention-mate-${TAG}.zip ($(du -h "mention-mate-${TAG}.zip" | cut -f1))"
 
       # FR-004 + FR-043: parse CHANGELOG section for current version
       - name: Extract changelog notes

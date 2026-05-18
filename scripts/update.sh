@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # MentionMate — Update wizard for Linux/macOS
-# Docs: https://github.com/hoangp47/mentionmate
+# Docs: https://github.com/hoangp47/mention-mate
 #
 # Usage: ./update.sh
 
 set -euo pipefail
 
-readonly IMAGE="ghcr.io/hoangp47/mentionmate"
+readonly IMAGE="ghcr.io/hoangp47/mention-mate"
 readonly SESSION_FILE="./data/mentions_session.session"
 
 if [[ -t 1 ]]; then
@@ -38,7 +38,7 @@ fi
 printf '%s━━━ MentionMate Update ━━━%s\n\n' "$C_BOLD" "$C_RESET"
 
 # Step 1: Show current version (FR-031)
-current_digest=$(docker inspect mentionmate --format '{{.Image}}' 2>/dev/null || echo "")
+current_digest=$(docker inspect mention-mate --format '{{.Image}}' 2>/dev/null || echo "")
 if [[ -n "$current_digest" ]]; then
     current_tag=$(docker images --no-trunc --format '{{.Repository}}:{{.Tag}}@{{.ID}}' \
         | grep "^${IMAGE}:" | grep "${current_digest}" | head -1 | awk -F'@' '{print $1}' || echo "unknown")
@@ -87,6 +87,6 @@ fi
 sleep 3
 
 # Step 6: Verify (FR-031)
-new_tag=$(docker inspect mentionmate --format '{{.Config.Image}}' 2>/dev/null || echo "unknown")
+new_tag=$(docker inspect mention-mate --format '{{.Config.Image}}' 2>/dev/null || echo "unknown")
 ok "Update complete. Image: $new_tag"
 printf '\n📝 Tail logs: %s%s logs -f bot%s\n' "$C_BOLD" "$COMPOSE_CMD" "$C_RESET"

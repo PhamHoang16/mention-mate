@@ -102,9 +102,9 @@ Open Telegram → Settings → look up your username (without `@`). Example: `ho
 
 ## Step 3 — Download MentionMate
 
-1. Go to https://github.com/hoangp47/mentionmate/releases
+1. Go to https://github.com/hoangp47/mention-mate/releases
 2. Find the latest release (e.g. `v0.1.0`).
-3. Download `mentionmate-v0.1.0.zip` from the "Assets" section.
+3. Download `mention-mate-v0.1.0.zip` from the "Assets" section.
 4. Unzip into any folder (e.g. `~/MentionMate` on Linux/macOS, `C:\MentionMate` on Windows).
 
 > _Screenshot 4 placeholder: GitHub Releases page with zip asset highlighted._
@@ -163,7 +163,7 @@ The wizard verifies Docker, Compose v2, and any prior configuration. If a check 
 If the format is wrong, the wizard reports the error and re-prompts without advancing.
 
 ### Step 8: Pull the image
-The wizard pulls `ghcr.io/hoangp47/mentionmate:latest` — the first pull takes 1–2 minutes.
+The wizard pulls `ghcr.io/hoangp47/mention-mate:latest` — the first pull takes 1–2 minutes.
 
 ### Step 9: Discover chat_id
 
@@ -235,12 +235,12 @@ The session file at `data/mentions_session.session` is equivalent to a credentia
 
 ```bash
 # Linux/macOS — copy to ~/Backups/
-cp data/mentions_session.session ~/Backups/mentionmate-session-$(date +%Y%m%d).session
+cp data/mentions_session.session ~/Backups/mention-mate-session-$(date +%Y%m%d).session
 ```
 
 ```powershell
 # Windows
-Copy-Item data\mentions_session.session "$env:USERPROFILE\Backups\mentionmate-session-$(Get-Date -Format yyyyMMdd).session"
+Copy-Item data\mentions_session.session "$env:USERPROFILE\Backups\mention-mate-session-$(Get-Date -Format yyyyMMdd).session"
 ```
 
 The update wizard automatically reminds you to back up if the session is more than 7 days old.

@@ -1,11 +1,11 @@
 # MentionMate — Update wizard for Windows (PowerShell 5.1+)
-# Docs: https://github.com/hoangp47/mentionmate
+# Docs: https://github.com/hoangp47/mention-mate
 #
 # Usage: .\update.ps1
 
 $ErrorActionPreference = 'Stop'
 
-$IMAGE       = 'ghcr.io/hoangp47/mentionmate'
+$IMAGE       = 'ghcr.io/hoangp47/mention-mate'
 $SessionFile = '.\data\mentions_session.session'
 
 function Write-Ok    { param($Msg) Write-Host "✅ $Msg" -ForegroundColor Green }
@@ -35,7 +35,7 @@ Write-Host "`n━━━ MentionMate Update ━━━`n" -ForegroundColor Cyan
 
 # Step 1: Current version
 try {
-    $currentImage = docker inspect mentionmate --format '{{.Config.Image}}' 2>$null
+    $currentImage = docker inspect mention-mate --format '{{.Config.Image}}' 2>$null
     if ($currentImage) { Write-Host "📍 Current version: $currentImage" -ForegroundColor White }
     else { Write-Warn 'No running container detected (may never have been started).' }
 } catch { $currentImage = $null }
@@ -75,7 +75,7 @@ Start-Sleep -Seconds 3
 
 # Step 5: Verify
 try {
-    $newImage = docker inspect mentionmate --format '{{.Config.Image}}' 2>$null
+    $newImage = docker inspect mention-mate --format '{{.Config.Image}}' 2>$null
     Write-Ok "Update complete. Image: $newImage"
 } catch {
     Write-Ok 'Update complete.'
