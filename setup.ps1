@@ -316,6 +316,10 @@ TG_ALERT_CHAT_ID=$($Script:TG_ALERT_CHAT_ID)
 function Invoke-TelethonAuth {
     Write-Step '8/12 Telethon userbot login'
     New-Item -ItemType Directory -Force -Path $DataDir | Out-Null
+    # On WSL2/Linux-mounted volumes the container user (uid 1001) needs write
+    # access to data/. Docker Desktop on Windows usually handles uid mapping
+    # automatically; this is a safety net for WSL paths.
+    try { & wsl chmod 777 "$DataDir" 2>$null } catch { }
 
     if (Test-Path $SessionFile) {
         Write-Info 'Session file already exists — skipping interactive auth.'

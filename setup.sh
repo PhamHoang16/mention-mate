@@ -297,6 +297,10 @@ EOF
 telethon_auth() {
     log_step "8/12 Telethon userbot login (phone + OTP + 2FA if enabled)"
     mkdir -p "$DATA_DIR"
+    # Loose dir permission so the container's non-root user (uid 1001) can
+    # write the session file into the host-mounted volume. The session file
+    # itself is later chmod 600.
+    chmod 777 "$DATA_DIR" 2>/dev/null || true
 
     if [[ -f "$SESSION_FILE" ]]; then
         log_info "Session file already exists — skipping interactive auth."
