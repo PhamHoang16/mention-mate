@@ -25,6 +25,18 @@ __pycache__/
 # GitNexus index
 .gitnexus
 
+# AI agent machinery (kept locally for development, not in public repo)
+# These exist on the `dev` branch — master stays clean for public users
+.claude/
+.codex/
+.vsaf/
+AGENTS.md
+CLAUDE.md
+
+# Translation / sed backup files (in case sed -i.bak was used somewhere)
+*.bak
+*.orig
+
 # OS/editor
 .DS_Store
 Thumbs.db
