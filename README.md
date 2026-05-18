@@ -97,21 +97,22 @@ docker compose restart
 - 📖 **[SETUP.md](docs/SETUP.md)** — Step-by-step install guide with screenshots
 - 🔧 **[TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** — Common issues and fixes
 - 📝 **[CHANGELOG.md](CHANGELOG.md)** — Version history
-- 🏗️ **[Architecture](.vsaf/docs/srs/SRS-tele-FR-DIST-distribution-v1.0.md)** — Technical design
 
 ---
 
-## Security notice
+## Privacy & security
 
-⚠️ **MentionMate uses your personal Telegram account** through a Telethon userbot to read group messages. That means:
+MentionMate runs **entirely on your own machine** — no cloud, no third-party service, no telemetry. Your messages stay where they already are: with you and Telegram.
 
-- The tool has access to **all** of your Telegram messages, including private chats.
-- It only inspects messages to detect mentions; it **does not store** message content outside your machine.
-- The session file (`data/mentions_session.session`) is **equivalent to a credential** — never share it or back it up to cloud services.
-- When you leave your job or switch machines: **revoke** the session via Telegram → Settings → Devices.
-- You are responsible for complying with Telegram's ToS and your organization's data-handling policies.
+A few things worth knowing, in plain English:
 
-If your employer has strict data-handling policies, check with your information-security team before installing.
+- **What the tool sees.** The userbot signs in with your Telegram account, exactly like Telegram Desktop does, and reads messages so it can spot when someone @mentions you. That's it — nothing is stored, profiled, or sent anywhere else.
+- **No data leaves your machine.** The only outbound connections are to Telegram's own API (to read messages and deliver the alert) and to GitHub's container registry (one-time, to download the image). No analytics, no telemetry, no opaque cloud.
+- **The session file is your "logged-in" token.** `data/mentions_session.session` keeps you signed in across restarts. Treat it like a password: don't email it, don't sync it to cloud drives, don't share screenshots of it.
+- **Easy off-switch.** When you switch laptops, change jobs, or just want to stop: open Telegram → Settings → Devices and revoke the session in one tap. Same as logging out of Telegram Web.
+- **Fully open source.** Every line of code is in this repo, MIT-licensed. Audit it, fork it, customize it.
+
+If your employer has formal data-handling policies around messaging tools, it's worth a quick check with them — but for most people this is no different from running Telegram Desktop with an extra notification helper on top.
 
 ---
 
