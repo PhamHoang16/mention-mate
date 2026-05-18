@@ -1,7 +1,33 @@
 # Credentials — KHÔNG BAO GIỜ commit file này
 .env
+.env.local
+.env.*.local
 
 # Telethon session files — chứa thông tin đăng nhập đã xác thực
 *.session
 *.session-journal
+
+# Runtime data folder mounted into container
+data/
+
+# Release build artifacts
+dist/
+*.zip
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+
+# GitNexus index
 .gitnexus
+
+# OS/editor
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/

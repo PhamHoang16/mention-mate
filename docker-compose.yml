@@ -1,0 +1,48 @@
+# MentionMate — Telegram mention alert daemon
+# Docs: https://github.com/hoangp47/mentionmate
+#
+# User chỉ cần copy file này + .env (từ .env.example) + tạo thư mục ./data,
+# sau đó chạy: docker compose up -d
+#
+# Wizard (./setup.sh hoặc setup.ps1) sẽ tự setup mọi thứ trên — không cần làm tay.
+
+services:
+  bot:
+    image: ghcr.io/hoangp47/mentionmate:latest
+    container_name: mentionmate
+    restart: unless-stopped
+
+    # Cấu hình lấy từ .env (cùng thư mục với file compose này).
+    # Tuyệt đối KHÔNG commit .env lên git.
+    env_file: .env
+
+    # Mount thư mục ./data để session Telethon persist qua restart/update.
+    # KHÔNG xoá thư mục này nếu không muốn phải re-auth.
+    volumes:
+      - ./data:/app/data
+
+    # Healthcheck: verify python main.py còn sống.
+    # Phase Hardening sẽ upgrade lên HTTP /healthz endpoint.
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'python.*main.py' > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    # Resource limit để không OOM máy user (đặc biệt laptop cá nhân).
+    # Quan sát thực tế: ~50MB RAM idle, peak ~120MB. 256MB là buffer thoải mái.
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+        reservations:
+          memory: 64M
+
+    # Logging: cap 10MB per file, 3 files = max 30MB log trên máy user.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

@@ -1,13 +1,17 @@
-# PRD: Distribution & Install Path cho tele-mention-bot
+# PRD: Distribution & Install Path cho MentionMate
 
 | Field | Value |
 |---|---|
 | **Document ID** | PRD-DIST-001 |
-| **Version** | 0.1.0 |
-| **Status** | DRAFT |
+| **Version** | 0.2.0 |
+| **Status** | APPROVED (2 open questions resolved 2026-05-18) |
 | **Created** | 2026-05-18 |
+| **Updated** | 2026-05-18 — Resolved GA-DIST-01 (public) + GA-DIST-04 (MentionMate) |
 | **Author** | hoangp47 (với Claude) |
 | **Approver** | hoangp47 |
+| **Product brand name** | **MentionMate** |
+| **GitHub repo (future rename)** | `github.com/hoangp47/mentionmate` (public) |
+| **Container image** | `ghcr.io/hoangp47/mentionmate` |
 | **Source plan** | `/home/hoangp47/.claude/plans/gleaming-soaring-moore.md` |
 | **Phase** | Phase 2 — Productization (xem roadmap §6 của plan) |
 
@@ -15,7 +19,7 @@
 
 ## 1. Executive Summary
 
-Hiện tại `tele-mention-bot` chỉ chạy được trên máy của chính tác giả vì cài đặt phải làm 6-7 bước thủ công (lấy API key, tạo bot, viết `.env`, build Docker, auth Telethon interactive...). Để release nội bộ phòng ban 10-30 user — trong đó ~50% không thạo CLI — cần một layer **đóng gói + cài đặt 1-lệnh** chạy được trên Windows/macOS/Linux.
+Hiện tại MentionMate (codename cũ: `mentionmate`) chỉ chạy được trên máy của chính tác giả vì cài đặt phải làm 6-7 bước thủ công (lấy API key, tạo bot, viết `.env`, build Docker, auth Telethon interactive...). Để release nội bộ phòng ban 10-30 user — trong đó ~50% không thạo CLI — cần một layer **đóng gói + cài đặt 1-lệnh** chạy được trên Windows/macOS/Linux.
 
 PRD này định nghĩa Phương án A (đã thống nhất sau brainstorm + VSAF-Plan): **Pre-built Docker image trên ghcr.io + setup wizard cross-platform được phát hành qua GitHub Releases**.
 
@@ -26,7 +30,7 @@ Kết quả mong đợi: từ lúc user click vào link tải đến lúc có al
 ## 2. Vision & Goals
 
 ### Vision (VIS-001)
-Mọi nhân viên Viettel quan tâm đến tool có thể tự cài đặt tele-mention-bot trên máy của mình mà không cần biết về Docker CLI hay Telethon, chỉ bằng cách tải 1 file zip và chạy 1 lệnh duy nhất với hướng dẫn step-by-step.
+Mọi nhân viên Viettel quan tâm đến tool có thể tự cài đặt MentionMate trên máy của mình mà không cần biết về Docker CLI hay Telethon, chỉ bằng cách tải 1 file zip và chạy 1 lệnh duy nhất với hướng dẫn step-by-step.
 
 ### Goals
 | ID | Goal | Đo lường |
@@ -92,7 +96,7 @@ PRD này phải work cho cả 3 personas. Persona 1 và 3 là target sweet spot;
 ## 5. Scope & Out-of-scope
 
 ### In-scope
-- Multi-arch Docker image (linux/amd64 + linux/arm64) trên `ghcr.io/hoangp47/tele-mention-bot`.
+- Multi-arch Docker image (linux/amd64 + linux/arm64) trên `ghcr.io/hoangp47/mentionmate`.
 - `docker-compose.yml` template.
 - Setup wizard interactive: `setup.sh` (Bash POSIX) + `setup.ps1` (PowerShell 5.1+).
 - Update wizard: `update.sh` + `update.ps1`.
@@ -130,7 +134,7 @@ PRD này phải work cho cả 3 personas. Persona 1 và 3 là target sweet spot;
 ### Build & Release Pipeline
 - **FR-001:** Hệ thống PHẢI có 1 GitHub Actions workflow trigger khi push git tag matching `v*.*.*`.
 - **FR-002:** Workflow PHẢI build Docker image cho cả linux/amd64 và linux/arm64.
-- **FR-003:** Workflow PHẢI push image lên ghcr.io với 2 tag: phiên bản chính xác (`v0.1.0`) và `latest`.
+- **FR-003:** Workflow PHẢI push image lên `ghcr.io/hoangp47/mentionmate` với 2 tag: phiên bản chính xác (`v0.1.0`) và `latest`.
 - **FR-004:** Workflow PHẢI tạo GitHub Release tự động với release notes lấy từ CHANGELOG.md và đính kèm 1 file zip chứa: `docker-compose.yml`, `setup.sh`, `setup.ps1`, `update.sh`, `update.ps1`, `.env.example`, `README.md`, `docs/`.
 - **FR-005:** Image PHẢI có `HEALTHCHECK` directive trong Dockerfile.
 - **FR-006:** Image PHẢI có OCI annotation `org.opencontainers.image.source` trỏ về GitHub repo để ghcr.io link image với repo.
@@ -192,7 +196,7 @@ PRD này phải work cho cả 3 personas. Persona 1 và 3 là target sweet spot;
 |---|---|---|---|---|
 | E-1.S-1 | Maintainer | push tag `v0.x.y` và workflow tự build image | Không phải build manual trên máy mình | Khi push tag, GitHub Actions hoàn thành success, image xuất hiện trên ghcr.io |
 | E-1.S-2 | Mac M-series user | pull image và Docker dùng native arm64 | Không bị chậm qua Rosetta | `docker inspect` cho thấy arch khớp với host |
-| E-1.S-3 | Maintainer | release zip tự đính kèm vào GitHub Release | User chỉ tải 1 file là đủ | Release page có 1 file `tele-mention-bot-v0.x.y.zip` |
+| E-1.S-3 | Maintainer | release zip tự đính kèm vào GitHub Release | User chỉ tải 1 file là đủ | Release page có 1 file `mentionmate-v0.x.y.zip` |
 | E-1.S-4 | Maintainer | image tag `latest` luôn trỏ về phiên bản mới nhất | User mới dùng `:latest` không bị bản cũ | `docker pull :latest` sau release trả về digest khớp `:v0.x.y` |
 
 ### Epic E-2: Setup Wizard Cross-platform
@@ -275,11 +279,11 @@ Tổng: **3-4 tuần effort 1 dev part-time (~10-15h/tuần)** để đến v0.1
 
 ## 13. Open Questions
 
-1. **Repo public hay private?** ghcr.io image public free, private cần token. Đề xuất public repo (code và image), `.env` user-side vẫn private. → Cần decision của tác giả.
+1. ~~**Repo public hay private?**~~ **RESOLVED 2026-05-18: PUBLIC.** Lý do: (a) onboarding 0-friction cho ghcr.io pull anonymous, (b) GitHub Actions unlimited minutes, (c) positioning mạnh cho Sáng kiến open-source, (d) code không chứa thông tin nghiệp vụ Viettel. **Prerequisite:** Phase 0 phải purge token đã leak khỏi git history TRƯỚC khi push public.
 2. **Có cần signing PowerShell script bằng cert Viettel không?** Phụ thuộc policy ExecutionPolicy trên máy Viettel. → Cần verify sau khi pilot.
 3. **CHANGELOG.md viết bằng tiếng Việt hay Anh?** → Đề xuất Việt vì user là Viettel internal, source code comment đã Việt.
 4. **Có cần bot Telegram dedicated cho channel thông báo release không?** Phase 3 — out of scope PRD này.
-5. **Tên tool chính thức cho release: "tele-mention-bot" hay đặt tên hay hơn cho Sáng kiến?** → Đề xuất tác giả nghĩ tên (vd "MentionMate", "NhắcMình", "TagAlert")...
+5. ~~**Tên tool chính thức cho release?**~~ **RESOLVED 2026-05-18: MentionMate.** Lý do: pun "mention + mate" thân thiện professional, brand-able, gợi tinh thần đồng đội phù hợp Sáng kiến Viettel. Tagline gợi ý: *"MentionMate — Never miss when your team @mentions you."* GitHub repo và ghcr.io image package đều dùng slug `mentionmate` (lowercase).
 
 ---
 

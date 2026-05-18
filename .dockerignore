@@ -1,0 +1,49 @@
+# Secrets - NEVER include in image
+.env
+.env.*
+*.session
+*.session-journal
+
+# Runtime data (user-side, mounted as volume)
+data/
+
+# Build artifacts
+dist/
+*.zip
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Wizards and orchestration (not needed inside container)
+setup.sh
+setup.ps1
+update.sh
+update.ps1
+docker-compose.yml
+.dockerignore
+
+# Documentation (not needed inside container)
+README.md
+CHANGELOG.md
+docs/
+.vsaf/
+
+# CI
+.github/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/

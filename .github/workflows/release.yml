@@ -1,0 +1,136 @@
+name: Release
+
+# Trigger khi push tag matching SemVer (vd v0.1.0, v1.2.3, v0.1.0-rc1)
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+# Permissions tối thiểu để push ghcr.io + tạo release
+permissions:
+  contents: write       # tạo GitHub Release
+  packages: write       # push ghcr.io
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}   # ví dụ: hoangp47/mentionmate
+
+jobs:
+  release:
+    name: Build & Publish ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+
+    steps:
+      # FR-001: checkout tại tag commit
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # cần history để parse CHANGELOG
+
+      # FR-002: setup buildx cho multi-arch
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # FR-003: login ghcr.io với GITHUB_TOKEN mặc định
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # FR-006: generate tags + OCI labels (BR-DIST-04-02)
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable=${{ !contains(github.ref_name, '-') }}
+          labels: |
+            org.opencontainers.image.title=MentionMate
+            org.opencontainers.image.description=Telegram mention alert daemon
+            org.opencontainers.image.licenses=MIT
+
+      # FR-002, FR-003, FR-005: build multi-arch + push (BR-DIST-04-01)
+      - name: Build and push multi-arch image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # FR-004: package release zip (BR-DIST-04-03)
+      - name: Prepare release zip
+        id: zip
+        run: |
+          set -euo pipefail
+          TAG="${{ github.ref_name }}"
+          DIST_DIR="dist/mentionmate-${TAG}"
+          mkdir -p "$DIST_DIR"
+          cp docker-compose.yml setup.sh setup.ps1 update.sh update.ps1 .env.example README.md "$DIST_DIR/"
+          cp -r docs "$DIST_DIR/" 2>/dev/null || mkdir -p "$DIST_DIR/docs"
+          cd dist
+          zip -r "mentionmate-${TAG}.zip" "mentionmate-${TAG}"
+          echo "zip_path=dist/mentionmate-${TAG}.zip" >> "$GITHUB_OUTPUT"
+          echo "Created: dist/mentionmate-${TAG}.zip ($(du -h "mentionmate-${TAG}.zip" | cut -f1))"
+
+      # FR-004 + FR-043: parse CHANGELOG section for current version
+      - name: Extract changelog notes
+        id: changelog
+        run: |
+          set -euo pipefail
+          TAG="${{ github.ref_name }}"
+          VERSION="${TAG#v}"   # strip leading v
+          if [[ ! -f CHANGELOG.md ]]; then
+            echo "notes=No CHANGELOG.md found." >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Parse Keep-a-Changelog format: capture section between "## [X.Y.Z]" and next "## ["
+          NOTES=$(awk -v ver="$VERSION" '
+            /^## \[/ {
+              if (capture) exit
+              if ($0 ~ "\\[" ver "\\]") { capture=1; next }
+            }
+            capture { print }
+          ' CHANGELOG.md)
+          if [[ -z "$NOTES" ]]; then
+            NOTES="Release $TAG. See [CHANGELOG.md](./CHANGELOG.md) for details."
+          fi
+          # Multi-line output (GitHub Actions syntax)
+          {
+            echo 'notes<<CHANGELOG_EOF'
+            echo "$NOTES"
+            echo "CHANGELOG_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # FR-004: create GitHub Release with zip + notes (BR-DIST-04-01)
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          body: |
+            ## MentionMate ${{ github.ref_name }}
+
+            ${{ steps.changelog.outputs.notes }}
+
+            ## Installation
+
+            Tải file zip bên dưới, giải nén, rồi chạy:
+            - Linux/macOS: `./setup.sh`
+            - Windows:     `.\setup.ps1`
+
+            Image: `ghcr.io/${{ env.IMAGE_NAME }}:${{ github.ref_name }}`
+
+            See [SETUP.md](./docs/SETUP.md) for step-by-step guide.
+          files: ${{ steps.zip.outputs.zip_path }}
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          draft: false
