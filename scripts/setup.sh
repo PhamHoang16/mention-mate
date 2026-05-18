@@ -7,6 +7,25 @@
 
 set -euo pipefail
 
+# ----- Locate project root -----
+# Wizard relies on relative paths for .env, data/, docker-compose.yml.
+# Run from anywhere — switch to the directory containing docker-compose.yml.
+__locate_project_root() {
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    if [[ -f "docker-compose.yml" ]]; then
+        return 0
+    elif [[ -f "$script_dir/docker-compose.yml" ]]; then
+        cd "$script_dir"
+    elif [[ -f "$script_dir/../docker-compose.yml" ]]; then
+        cd "$script_dir/.."
+    else
+        echo "❌ Could not locate docker-compose.yml. Run setup from the MentionMate directory." >&2
+        exit 1
+    fi
+}
+__locate_project_root
+
 # ----- Constants -----
 readonly IMAGE="ghcr.io/phamhoang16/mention-mate:latest"
 readonly ENV_FILE=".env"

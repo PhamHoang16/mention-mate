@@ -15,6 +15,21 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+# ----- Locate project root -----
+# Wizard relies on relative paths for .env, data\, docker-compose.yml.
+# Run from anywhere — switch to the directory containing docker-compose.yml.
+function Set-ProjectRoot {
+    $scriptDir = Split-Path -Parent $PSCommandPath
+    if (Test-Path 'docker-compose.yml') { return }
+    elseif (Test-Path (Join-Path $scriptDir 'docker-compose.yml')) { Set-Location $scriptDir }
+    elseif (Test-Path (Join-Path $scriptDir '..\docker-compose.yml')) { Set-Location (Join-Path $scriptDir '..') }
+    else {
+        Write-Host "❌ Could not locate docker-compose.yml. Run setup from the MentionMate directory." -ForegroundColor Red
+        exit 1
+    }
+}
+Set-ProjectRoot
+
 # ----- Constants -----
 $IMAGE       = 'ghcr.io/phamhoang16/mention-mate:latest'
 $EnvFile     = '.env'

@@ -5,6 +5,19 @@
 
 $ErrorActionPreference = 'Stop'
 
+# ----- Locate project root (same logic as setup.ps1) -----
+function Set-ProjectRoot {
+    $scriptDir = Split-Path -Parent $PSCommandPath
+    if (Test-Path 'docker-compose.yml') { return }
+    elseif (Test-Path (Join-Path $scriptDir 'docker-compose.yml')) { Set-Location $scriptDir }
+    elseif (Test-Path (Join-Path $scriptDir '..\docker-compose.yml')) { Set-Location (Join-Path $scriptDir '..') }
+    else {
+        Write-Host "❌ Could not locate docker-compose.yml. Run update from the MentionMate directory." -ForegroundColor Red
+        exit 1
+    }
+}
+Set-ProjectRoot
+
 $IMAGE       = 'ghcr.io/phamhoang16/mention-mate'
 $SessionFile = '.\data\mentions_session.session'
 
@@ -24,11 +37,6 @@ try {
         Write-Err 'Neither docker compose nor docker-compose found.'
         exit 1
     }
-}
-
-if (-not (Test-Path 'docker-compose.yml')) {
-    Write-Err 'docker-compose.yml not found. Run this script from the MentionMate directory.'
-    exit 1
 }
 
 Write-Host "`n━━━ MentionMate Update ━━━`n" -ForegroundColor Cyan

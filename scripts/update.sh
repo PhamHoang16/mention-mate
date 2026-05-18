@@ -6,6 +6,23 @@
 
 set -euo pipefail
 
+# ----- Locate project root (same logic as setup.sh) -----
+__locate_project_root() {
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    if [[ -f "docker-compose.yml" ]]; then
+        return 0
+    elif [[ -f "$script_dir/docker-compose.yml" ]]; then
+        cd "$script_dir"
+    elif [[ -f "$script_dir/../docker-compose.yml" ]]; then
+        cd "$script_dir/.."
+    else
+        echo "❌ Could not locate docker-compose.yml. Run update from the MentionMate directory." >&2
+        exit 1
+    fi
+}
+__locate_project_root
+
 readonly IMAGE="ghcr.io/phamhoang16/mention-mate"
 readonly SESSION_FILE="./data/mentions_session.session"
 
@@ -26,12 +43,6 @@ elif command -v docker-compose &>/dev/null; then
     COMPOSE_CMD="docker-compose"
 else
     err "Neither 'docker compose' nor 'docker-compose' found."
-    exit 1
-fi
-
-# Verify we're in the right directory
-if [[ ! -f docker-compose.yml ]]; then
-    err "docker-compose.yml not found. Run this script from the MentionMate directory."
     exit 1
 fi
 
