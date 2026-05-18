@@ -317,7 +317,7 @@ telethon_auth() {
             -v "$(pwd)/${DATA_DIR}:/app/data" \
             --env-file "$ENV_FILE" \
             "$IMAGE" \
-            python /app/scripts/auth.py; then
+            python -m mentionmate.auth; then
             log_ok "Telethon session created: $SESSION_FILE"
             chmod 600 "$SESSION_FILE" 2>/dev/null || true
             return 0

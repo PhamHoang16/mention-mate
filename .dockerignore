@@ -25,10 +25,7 @@ __pycache__/
 .gitattributes
 
 # Wizards and orchestration (not needed inside container)
-setup.sh
-setup.ps1
-update.sh
-update.ps1
+scripts/
 docker-compose.yml
 .dockerignore
 

@@ -195,7 +195,7 @@ Look for lines containing "Error" or "Exception". Common errors:
 docker inspect mentionmate --format '{{.State.Health.Status}}'
 ```
 
-`pgrep` cannot find `python main.py`. The container is either restarting or has crashed. Check the logs.
+`pgrep` cannot find the `python -m mentionmate` process. The container is either restarting or has crashed. Check the logs.
 
 ---
 

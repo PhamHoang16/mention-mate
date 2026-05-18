@@ -68,6 +68,8 @@ jobs:
           cache-to: type=gha,mode=max
 
       # FR-004: package release zip (BR-DIST-04-03)
+      # Source layout has wizards in scripts/, but the zip flattens them to the
+      # root of the extracted dir so end users run `./setup.sh` directly.
       - name: Prepare release zip
         id: zip
         run: |
@@ -75,7 +77,9 @@ jobs:
           TAG="${{ github.ref_name }}"
           DIST_DIR="dist/mentionmate-${TAG}"
           mkdir -p "$DIST_DIR"
-          cp docker-compose.yml setup.sh setup.ps1 update.sh update.ps1 .env.example README.md "$DIST_DIR/"
+          cp docker-compose.yml .env.example README.md CHANGELOG.md "$DIST_DIR/"
+          cp scripts/setup.sh scripts/setup.ps1 scripts/update.sh scripts/update.ps1 "$DIST_DIR/"
+          chmod +x "$DIST_DIR"/*.sh
           cp -r docs "$DIST_DIR/" 2>/dev/null || mkdir -p "$DIST_DIR/docs"
           cd dist
           zip -r "mentionmate-${TAG}.zip" "mentionmate-${TAG}"

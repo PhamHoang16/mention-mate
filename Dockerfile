@@ -1,8 +1,11 @@
 FROM python:3.11-slim AS builder
 
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy package source and metadata, then install the package + its declared deps
+COPY pyproject.toml .
+COPY src/ ./src/
+RUN pip install --no-cache-dir .
 
 FROM python:3.11-slim
 
@@ -16,10 +19,9 @@ RUN useradd -m -r -u 1001 tgbot
 
 WORKDIR /app
 
-# Copy installed packages from the builder stage
+# Copy installed packages (including mentionmate) from the builder stage
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY --chown=tgbot:tgbot main.py .
-COPY --chown=tgbot:tgbot scripts/ ./scripts/
+COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Create the data dir as root, then chown and drop privileges
 RUN mkdir -p /app/data && chown -R tgbot:tgbot /app
@@ -36,6 +38,6 @@ LABEL org.opencontainers.image.title="MentionMate" \
 
 # Verify the Python entry process is alive. The hardening phase will replace this with an HTTP /healthz check.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD pgrep -f 'python.*main.py' > /dev/null || exit 1
+    CMD pgrep -f 'python.*mentionmate' > /dev/null || exit 1
 
-CMD ["python", "main.py"]
+CMD ["python", "-m", "mentionmate"]

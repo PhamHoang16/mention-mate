@@ -336,7 +336,7 @@ function Invoke-TelethonAuth {
             -v "${cwd}\data:/app/data" `
             --env-file $EnvFile `
             $IMAGE `
-            python /app/scripts/auth.py
+            python -m mentionmate.auth
 
         if ($LASTEXITCODE -eq 0 -and (Test-Path $SessionFile)) {
             Write-Ok "Telethon session created: $SessionFile"

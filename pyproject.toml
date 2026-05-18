@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mentionmate"
+version = "0.1.0"
+description = "Telegram mention alert daemon — never miss when your team @mentions you"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "hoangp47" }]
+keywords = ["telegram", "telethon", "mention", "alert", "notification"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Communications :: Chat",
+]
+dependencies = [
+    "telethon==1.33.1",
+    "aiohttp==3.9.5",
+    "python-dotenv==1.0.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/hoangp47/mentionmate"
+Issues = "https://github.com/hoangp47/mentionmate/issues"
+Changelog = "https://github.com/hoangp47/mentionmate/blob/master/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
