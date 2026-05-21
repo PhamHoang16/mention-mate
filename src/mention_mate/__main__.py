@@ -1,10 +1,11 @@
 import os
-import html
 import asyncio
 import aiohttp
 from dotenv import load_dotenv
 from telethon import TelegramClient, events
-from telethon.tl.types import Channel
+
+from mention_mate.alert_renderer import render_alert
+from mention_mate.permalink_resolver import resolve_message_link
 
 load_dotenv()
 
@@ -83,55 +84,13 @@ async def main():
         sender_name = getattr(sender, 'first_name', None) or 'Unknown'
         chat_title = getattr(chat, 'title', None) or 'Private Chat'
 
-        # t.me/c/<id>/<msg_id> only resolves for Channel (supergroups,
-        # megagroups, broadcast channels). Basic groups (Chat) and DMs (User)
-        # have no message-permalink format — Telegram silently lands on an
-        # unrelated channel and shows "no permission". Emit a fallback hint
-        # in those cases instead of a broken link.
-        if isinstance(chat, Channel):
-            username = getattr(chat, 'username', None)
-            if username:
-                message_link = f"https://t.me/{username}/{event.id}"
-            else:
-                message_link = f"https://t.me/c/{chat.id}/{event.id}"
-        else:
-            message_link = None
+        message_link = resolve_message_link(chat, event.id)
 
-        # HTML mode: only <, >, & in user-generated content need to be escaped.
-        # Much safer than Markdown — Markdown crashes on any unmatched special
-        # character (*, _, [, `) and silently drops the alert.
-        sender_html = html.escape(sender_name)
-        chat_html = html.escape(chat_title)
-        text_html = html.escape(text)
-
-        if message_link:
-            link_html = html.escape(message_link, quote=True)
-            link_block_html = f'🔗 <a href="{link_html}">Open in Telegram →</a>'
-            link_block_plain = f"🔗 {message_link}"
-        else:
-            link_block_html = (
-                f"💡 <i>Basic group — open Telegram and check "
-                f"<b>{chat_html}</b> to find this message.</i>"
-            )
-            link_block_plain = (
-                f"💡 Basic group — open Telegram and check "
-                f"{chat_title} to find this message."
-            )
-
-        html_msg = (
-            f"👋 <b>New mention</b>\n"
-            f"<b>{sender_html}</b> mentioned you in <i>{chat_html}</i>\n"
-            f"━━━━━━━━━━━━━━━\n\n"
-            f"<blockquote expandable>{text_html}</blockquote>\n\n"
-            f"━━━━━━━━━━━━━━━\n"
-            f"{link_block_html}"
-        )
-        plain_msg = (
-            f"👋 New mention\n"
-            f"━━━━━━━━━━━━━━━\n"
-            f"{sender_name} mentioned you in {chat_title}\n\n"
-            f"{text}\n\n"
-            f"{link_block_plain}"
+        html_msg, plain_msg = render_alert(
+            sender_name=sender_name,
+            chat_title=chat_title,
+            message_text=text,
+            message_link=message_link,
         )
 
         try:

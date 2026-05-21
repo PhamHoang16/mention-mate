@@ -27,6 +27,9 @@ dependencies = [
     "python-dotenv==1.0.1",
 ]
 
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
 [project.urls]
 Homepage = "https://github.com/PhamHoang16/mention-mate"
 Issues = "https://github.com/PhamHoang16/mention-mate/issues"
