@@ -39,12 +39,12 @@ def render_alert(
         link_block_plain = f"🔗 {message_link}"
     else:
         link_block_html = (
-            f"💡 <i>Basic group — open Telegram and check "
-            f"<b>{chat_html}</b> to find this message.</i>"
+            f"💡 <i>Open Telegram and check "
+            f"<b>{chat_html}</b>.</i>"
         )
         link_block_plain = (
-            f"💡 Basic group — open Telegram and check "
-            f"{chat_title} to find this message."
+            f"💡 Open Telegram and check "
+            f"{chat_title}."
         )
 
     html_msg = (
