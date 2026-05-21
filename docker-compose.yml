@@ -4,7 +4,7 @@
 # You only need this file + .env (from .env.example) + a ./data directory,
 # then run: docker compose up -d
 #
-# The wizard (./setup.sh or setup.ps1) configures all of the above for you.
+# The wizard (./mention-mate.sh or mention-mate.ps1) configures all of the above for you.
 
 services:
   bot:
@@ -29,16 +29,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-
-    # Resource limits to avoid OOM on user machines (especially personal laptops).
-    # Observed in practice: ~50 MB idle, ~120 MB peak. 256 MB leaves comfortable headroom.
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-          cpus: "0.5"
-        reservations:
-          memory: 64M
 
     # Logging: 10 MB per file, 3 files retained = max 30 MB on disk.
     logging:

@@ -69,7 +69,7 @@ jobs:
 
       # FR-004: package release zip (BR-DIST-04-03)
       # Source layout has wizards in scripts/, but the zip flattens them to the
-      # root of the extracted dir so end users run `./setup.sh` directly.
+      # root of the extracted dir so end users run `./mention-mate.sh` directly.
       - name: Prepare release zip
         id: zip
         run: |
@@ -78,7 +78,7 @@ jobs:
           DIST_DIR="dist/mention-mate-${TAG}"
           mkdir -p "$DIST_DIR"
           cp docker-compose.yml .env.example README.md CHANGELOG.md "$DIST_DIR/"
-          cp scripts/setup.sh scripts/setup.ps1 scripts/update.sh scripts/update.ps1 "$DIST_DIR/"
+          cp scripts/mention-mate.sh scripts/mention-mate.ps1 "$DIST_DIR/"
           chmod +x "$DIST_DIR"/*.sh
           cp -r docs "$DIST_DIR/" 2>/dev/null || mkdir -p "$DIST_DIR/docs"
           cd dist
@@ -129,12 +129,12 @@ jobs:
             ## Installation
 
             Tải file zip bên dưới, giải nén, rồi chạy:
-            - Linux/macOS: `./setup.sh`
-            - Windows:     `.\setup.ps1`
+            - Linux/macOS: `./mention-mate.sh`
+            - Windows:     `.\mention-mate.ps1`
 
             Image: `ghcr.io/${{ env.IMAGE_NAME }}:${{ github.ref_name }}`
 
-            See [SETUP.md](./docs/SETUP.md) for step-by-step guide.
+            See [README.md](./README.md) for the full install + troubleshooting guide.
           files: ${{ steps.zip.outputs.zip_path }}
           prerelease: ${{ contains(github.ref_name, '-') }}
           draft: false
