@@ -4,6 +4,7 @@ import asyncio
 import aiohttp
 from dotenv import load_dotenv
 from telethon import TelegramClient, events
+from telethon.tl.types import Channel
 
 load_dotenv()
 
@@ -82,10 +83,19 @@ async def main():
         sender_name = getattr(sender, 'first_name', None) or 'Unknown'
         chat_title = getattr(chat, 'title', None) or 'Private Chat'
 
-        message_link = f"https://t.me/c/{chat.id}/{event.id}"
-        if str(chat.id).startswith('-100'):
-            clean_chat_id = str(chat.id)[4:]
-            message_link = f"https://t.me/c/{clean_chat_id}/{event.id}"
+        # t.me/c/<id>/<msg_id> only resolves for Channel (supergroups,
+        # megagroups, broadcast channels). Basic groups (Chat) and DMs (User)
+        # have no message-permalink format — Telegram silently lands on an
+        # unrelated channel and shows "no permission". Emit a fallback hint
+        # in those cases instead of a broken link.
+        if isinstance(chat, Channel):
+            username = getattr(chat, 'username', None)
+            if username:
+                message_link = f"https://t.me/{username}/{event.id}"
+            else:
+                message_link = f"https://t.me/c/{chat.id}/{event.id}"
+        else:
+            message_link = None
 
         # HTML mode: only <, >, & in user-generated content need to be escaped.
         # Much safer than Markdown — Markdown crashes on any unmatched special
@@ -93,26 +103,41 @@ async def main():
         sender_html = html.escape(sender_name)
         chat_html = html.escape(chat_title)
         text_html = html.escape(text)
-        link_html = html.escape(message_link, quote=True)
+
+        if message_link:
+            link_html = html.escape(message_link, quote=True)
+            link_block_html = f'🔗 <a href="{link_html}">Open in Telegram →</a>'
+            link_block_plain = f"🔗 {message_link}"
+        else:
+            link_block_html = (
+                f"💡 <i>Basic group — open Telegram and check "
+                f"<b>{chat_html}</b> to find this message.</i>"
+            )
+            link_block_plain = (
+                f"💡 Basic group — open Telegram and check "
+                f"{chat_title} to find this message."
+            )
 
         html_msg = (
-            f"🔔 <b>You were mentioned!</b>\n"
-            f"👤 <b>From:</b> {sender_html}\n"
-            f"🏢 <b>Group:</b> {chat_html}\n\n"
-            f"<blockquote>{text_html}</blockquote>\n\n"
-            f'🔗 <a href="{link_html}">Jump to message</a>'
+            f"👋 <b>New mention</b>\n"
+            f"<b>{sender_html}</b> mentioned you in <i>{chat_html}</i>\n"
+            f"━━━━━━━━━━━━━━━\n\n"
+            f"<blockquote expandable>{text_html}</blockquote>\n\n"
+            f"━━━━━━━━━━━━━━━\n"
+            f"{link_block_html}"
         )
         plain_msg = (
-            f"🔔 You were mentioned!\n"
-            f"👤 From: {sender_name}\n"
-            f"🏢 Group: {chat_title}\n\n"
+            f"👋 New mention\n"
+            f"━━━━━━━━━━━━━━━\n"
+            f"{sender_name} mentioned you in {chat_title}\n\n"
             f"{text}\n\n"
-            f"🔗 {message_link}"
+            f"{link_block_plain}"
         )
 
         try:
             await send_alert(http_session, html_msg, plain_msg, text)
-            print(f"Forwarded a message from {chat_title}")
+            suffix = "" if message_link else " (basic group — no permalink)"
+            print(f"Forwarded a message from {chat_title}{suffix}")
         except Exception:
             pass  # already fully logged inside send_alert
 
