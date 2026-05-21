@@ -1,4 +1,4 @@
-# Secrets - NEVER include in image
+# Secrets — NEVER include in image
 .env
 .env.*
 *.session
@@ -10,33 +10,57 @@ data/
 # Build artifacts
 dist/
 *.zip
+**/*.egg-info/
+src/mention_mate.egg-info/
 
 # Python
 .venv/
+.venv-*/
 __pycache__/
 *.pyc
 *.pyo
 .pytest_cache/
 .mypy_cache/
 
+# Tests — not installed by `pip install .`
+tests/
+
 # Git
 .git/
 .gitignore
 .gitattributes
+.gitnexus/
 
 # Wizards and orchestration (not needed inside container)
 scripts/
 docker-compose.yml
 .dockerignore
+mention-mate.sh
+mention-mate.ps1
 
 # Documentation (not needed inside container)
 README.md
 CHANGELOG.md
+LICENSE
 docs/
+plans/
+repomix-output.xml
+.repomixignore
+release-manifest.json
+
+# AI agent machinery
+.claude/
+.codex/
 .vsaf/
+CLAUDE.md
+AGENTS.md
 
 # CI
 .github/
+
+# Backups
+*.bak
+*.orig
 
 # OS/editor
 .DS_Store
@@ -44,4 +68,3 @@ Thumbs.db
 *.swp
 .vscode/
 .idea/
-plans/
