@@ -6,8 +6,14 @@
 mention-mate/
 ├── src/mention_mate/               # Main Python package
 │   ├── __init__.py                # Version string: __version__ = "0.1.0"
-│   ├── __main__.py               # Entry point: daemon loop (132 LOC)
+│   ├── __main__.py               # Entry point: daemon loop (116 LOC)
+│   ├── alert_renderer.py         # Pure alert message formatter (64 LOC)
+│   ├── permalink_resolver.py      # Message link URL builder (33 LOC)
 │   └── auth.py                   # Interactive Telethon login (42 LOC)
+├── tests/                         # Test suite
+│   ├── __init__.py               # Test package marker
+│   ├── test_permalink_resolver.py # URL generation unit tests (6 tests)
+│   └── test_alert_renderer.py    # Message rendering unit tests (7 tests)
 ├── scripts/                        # Setup and update wizards (unified)
 │   ├── mention-mate.sh           # Linux/macOS unified setup/update (~430 LOC)
 │   └── mention-mate.ps1          # Windows unified setup/update (~370 LOC)
@@ -55,12 +61,12 @@ Interactive Telethon login. Prompts for phone number, OTP, and 2FA password. Sav
 
 ## Core Modules
 
-### `__main__.py` (132 LOC)
+### `__main__.py` (116 LOC)
 
 **Responsibilities:**
 - Telethon client initialization and lifecycle management.
 - Message filtering and @mention detection (case-insensitive substring match on `@{username}`).
-- Alert formatting: HTML with escaping + plain-text fallback.
+- Orchestration: delegate link resolution to `permalink_resolver`, rendering to `alert_renderer`.
 - aiohttp POST to Telegram bot API (sendMessage).
 - Graceful error handling: try HTML → try plain → log raw text.
 
@@ -74,7 +80,34 @@ Interactive Telethon login. Prompts for phone number, OTP, and 2FA password. Sav
 - `telethon.TelegramClient`, `telethon.events.NewMessage`
 - `aiohttp.ClientSession`
 - `python-dotenv.load_dotenv`
-- Standard library: `os`, `html`, `asyncio`
+- Local: `alert_renderer.render_alert()`, `permalink_resolver.resolve_message_link()`
+- Standard library: `os`, `asyncio`
+
+### `alert_renderer.py` (64 LOC)
+
+**Responsibilities:**
+- Pure formatter for alert messages: renders HTML and plain-text templates.
+- HTML escaping for user-generated content (sender names, group titles, message text).
+- Link inclusion: replaces link parameter with fallback hint for basic groups.
+
+**Key Functions:**
+- `render_alert(*, sender_name: str, chat_title: str, message_text: str, message_link: str | None) -> tuple[str, str]`: Returns (html_msg, plain_msg). Keyword-only args.
+
+**Dependencies:**
+- Standard library: `html` (escaping only). No Telethon, no aiohttp.
+
+### `permalink_resolver.py` (33 LOC)
+
+**Responsibilities:**
+- Resolves Telegram message URLs based on chat type (Channel, Chat, User).
+- Only module in the codebase that imports `telethon.tl.types` discriminators.
+- Returns URL for Channels with usernames; fallback None for basic groups/DMs.
+
+**Key Functions:**
+- `resolve_message_link(chat, message_id: int) -> str | None`: Returns t.me URL (or None if not resolvable).
+
+**Dependencies:**
+- `telethon.tl.types.Channel` (type checking only).
 
 ### `auth.py` (42 LOC)
 
@@ -285,8 +318,12 @@ ghcr.io                # Docker image registry
 - HTML escaping on all user-generated content (sender names, group titles, message text).
 
 ### Testing
-- **Current state**: No test suite (Phase 1 goal: ≥80% coverage).
-- **Planned**: Unit tests for mention detection, alert formatting, HTML escaping; integration test for full alert pipeline.
+- **Current state**: Test suite for new seams (permalink resolver, alert renderer). 13 tests total.
+  - `tests/test_permalink_resolver.py`: 6 tests covering Channel with/without username, basic groups, DMs, edge cases.
+  - `tests/test_alert_renderer.py`: 7 tests covering HTML escaping, plain-text rendering, link/fallback handling.
+- **Installation**: `pip install -e ".[dev]"` (installs pytest>=8 from optional-dependencies).
+- **Running**: `pytest tests/`.
+- **Phase 1 goal**: Expand to ≥80% full codebase coverage; add mention detection, config loading, integration tests.
 
 ---
 

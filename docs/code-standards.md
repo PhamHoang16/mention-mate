@@ -4,10 +4,11 @@
 
 ### Python Modules
 - **Location**: `src/mention_mate/` (package root).
-- **Naming**: snake_case (Python convention). Examples: `__main__.py`, `auth.py`, `alert_handler.py` (future).
+- **Naming**: snake_case (Python convention). Examples: `__main__.py`, `auth.py`, `alert_renderer.py`, `permalink_resolver.py`.
 - **Size limit**: Keep under 200 LOC per file for readability. Refactor into separate modules if exceeded.
-  - Example split: if `__main__.py` grows beyond 200 LOC, extract `alert_handler.py` or `event_handler.py`.
+  - Example: `__main__.py` was split to extract `alert_renderer.py` (64 LOC) and `permalink_resolver.py` (33 LOC) for testability.
 - **Entry point**: `src/mention_mate/__main__.py` serves as the daemon entry point (`python -m mention_mate`).
+- **Module dependency rules**: See section below.
 
 ### Shell Scripts
 - **Location**: `scripts/` directory.
@@ -232,6 +233,25 @@
 
 ---
 
+## Module Dependency Rules
+
+To maintain clean seams and testability, enforce these module boundaries:
+
+| Module | Allowed Imports | Purpose |
+|--------|-----------------|---------|
+| `permalink_resolver` | `telethon.tl.types` (only this module), stdlib | Resolve message URLs by chat type |
+| `alert_renderer` | stdlib `html` only | Pure formatter; no framework deps |
+| `__main__` | `telethon`, `aiohttp`, `.alert_renderer`, `.permalink_resolver` | Orchestration layer |
+| `auth` | `telethon`, stdlib | Setup-only login flow |
+
+**Rationale:**
+- `permalink_resolver` is the **only** place where `telethon.tl.types` is imported. Future URL schemes (deep-links, invite tokens) go here.
+- `alert_renderer` is pure: same input always produces byte-identical output. No side effects, no mocks needed in tests.
+- Format changes (emoji, HTML tags, link text) stay in `alert_renderer`.
+- `__main__` is thin: imports both helpers + Telethon/aiohttp, coordinates event loop → link → render → send.
+
+---
+
 ## Docker Standards
 
 ### Dockerfile Best Practices
@@ -304,7 +324,21 @@ Follow **Conventional Commits** (https://www.conventionalcommits.org/):
 ## Testing Standards
 
 ### Current State (v0.1.0)
-- **No test suite** — Phase 1 goal.
+- **Test scaffold**: 13 tests covering new seams (`permalink_resolver`, `alert_renderer`).
+  - Install: `pip install -e ".[dev]"` (pytest>=8 from optional-dependencies in pyproject.toml).
+  - Run: `pytest tests/`.
+  - Coverage: New modules fully covered; Phase 1 goal: expand to ≥80% full codebase.
+
+### Faking Telethon Types in Tests
+- **Pattern**: Use `Cls.__new__(Cls) + setattr` to create real Telethon type instances without invoking `__init__`.
+- **Why not MagicMock?** Silent attribute access hides typos (e.g., misspelled `message_id`).
+- **Why not dataclass subclassing?** Telethon's `__init__` requires many positional args; inheritance fails.
+- **Example**:
+  ```python
+  channel = Channel.__new__(Channel)
+  setattr(channel, 'id', 12345)
+  setattr(channel, 'username', 'teamalpha')
+  ```
 
 ### Phase 1 Plan
 

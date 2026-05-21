@@ -19,16 +19,20 @@ User's Groups (Telegram)
          |
          | (NewMessage event via MTProto)
          v
-   [Userbot (Telethon)]
-   (user's personal account)
+   [__main__.py (Telethon)]
+   (userbot event handler)
          |
    [Match @mention?]
    (case-insensitive substring)
          |
          | (if match)
          v
-[HTML Formatter + Escape]
-   (safe HTML blocks)
+[permalink_resolver.resolve_message_link()]
+   (discriminate Channel vs Chat vs User)
+         |
+         v
+[alert_renderer.render_alert()]
+   (HTML + plain-text, escape user content)
          |
          v
 [aiohttp POST → Telegram Bot API]
@@ -90,48 +94,52 @@ if MENTION_TOKEN in text.lower():
 
 **Performance:** O(n) string search; acceptable for typical message lengths (<4KB).
 
-### 3. Alert Formatter
+### 3. Alert Formatter & Permalink Resolver (Separated Seams)
 
-**Role:** Construct HTML and plain-text alert messages with user content safely escaped.
+**Files:** `alert_renderer.py`, `permalink_resolver.py`
 
-**HTML Template:**
-```html
-🔔 <b>You were mentioned!</b>
-👤 <b>From:</b> {sender_name_escaped}
-🏢 <b>Group:</b> {chat_title_escaped}
+**Division of Responsibility:**
 
-<blockquote>{message_text_escaped}</blockquote>
+#### `permalink_resolver.resolve_message_link(chat, message_id) → str | None`
+- **Input**: Telethon `chat` object (Channel, Chat, or User) + message ID.
+- **Logic**: Discriminate by chat type using `isinstance(chat, Channel)`.
+  - **Channels with username**: Return `https://t.me/{username}/{message_id}`.
+  - **Channels without username**: Return `https://t.me/c/{chat_id}/{message_id}`.
+  - **Basic groups & DMs**: Return `None` (no public permalink scheme).
+- **Output**: URL string or None.
+- **Why separate?** Telethon import boundary; testable in isolation; swappable for future schemes (deep-links, invite tokens).
 
-🔗 <a href="{message_link}">Jump to message</a>
-```
+#### `alert_renderer.render_alert(sender_name, chat_title, message_text, message_link) → (html_msg, plain_msg)`
+- **Pure function**: keyword-only args, deterministic output, no side effects.
+- **HTML Template:**
+  ```html
+  🔔 <b>You were mentioned!</b>
+  👤 <b>From:</b> {sender_name_escaped}
+  🏢 <b>Group:</b> {chat_title_escaped}
+  
+  <blockquote>{message_text_escaped}</blockquote>
+  
+  🔗 <a href="{message_link}">Jump to message</a>
+  ```
+  Or (if `message_link is None`):
+  ```html
+  💡 Basic group — open Telegram and check {chat_title_escaped} to find this message.
+  ```
+- **Escaping**: All user content via `html.escape()` before template insertion.
+- **Plain-Text Fallback:**
+  ```
+  🔔 You were mentioned!
+  👤 From: {sender_name}
+  🏢 Group: {chat_title}
+  
+  {message_text}
+  
+  🔗 {message_link}
+  ```
+  (No escaping; used if HTML send fails.)
+- **Why separate?** Pure, testable, format-change hub; imports only stdlib `html`.
 
-**Escaping Strategy:**
-- All user-generated content (sender names, group titles, message text) escaped via `html.escape()`.
-- Special characters: `<`, `>`, `&` → `&lt;`, `&gt;`, `&amp;`.
-- URL in href attribute: escaped with `quote=True` to prevent injection.
-- **Why HTML mode?** Telegram's Markdown parser is strict and can crash on unmatched special chars (`*`, `_`, `` ` ``, `[`). HTML is more permissive.
-
-**Plain-Text Fallback:**
-```
-🔔 You were mentioned!
-👤 From: {sender_name}
-🏢 Group: {chat_title}
-
-{message_text}
-
-🔗 {message_link}
-```
-- No escaping needed (plain text). User content printed as-is.
-- Fallback used if HTML send fails or user prefers plain-text mode.
-
-**Link Generation:**
-```
-message_link = f"https://t.me/c/{clean_chat_id}/{msg_id}"
-```
-- Chat ID format: negative supergroup IDs (e.g., `-100123456789`) stripped to positive ID (`123456789`).
-- Allows user to tap and jump to the exact message in Telegram.
-
-### 4. HTTP Alert Sender (aiohttp)
+### 4. HTTP Alert Sender (aiohttp) — `__main__.py`
 
 **Role:** POST alert to Telegram bot API with retry/fallback logic.
 
@@ -273,32 +281,37 @@ CMD ["python", "-m", "mention_mate"]
    - chat_id = <group chat id>
    - text = "<@hoangp47 please review this>"
 
-4. Mention Detector:
+4. Mention Detector (__main__.py):
    - Skip if sender_id == BOT_ID (self-check).
    - Check if "@hoangp47" (lowercased) in text.lower() → MATCH.
 
-5. Alert Formatter:
+5. Permalink Resolver (permalink_resolver.py):
+   - Fetch chat object: Channel("Team Alpha", id=123456, username="team-alpha")
+   - Discriminate: Channel with username → resolve to "https://t.me/team-alpha/{msg_id}"
+
+6. Alert Renderer (alert_renderer.py):
    - Fetch sender name: "Alice"
    - Fetch chat title: "Team Alpha"
    - Escape all: sender_html="Alice", chat_html="Team Alpha", text_html="<@hoangp47...>"
-   - Build HTML template with escaped content + jump link.
+   - Render HTML + plain-text templates with escaped content + resolved link.
+   - Return: (html_msg, plain_msg)
 
-6. HTTP Alert Sender:
+7. HTTP Alert Sender (__main__.py):
    - POST to https://api.telegram.org/bot<TOKEN>/sendMessage
    - Payload: {"chat_id": 123456, "text": "<HTML>...", "parse_mode": "HTML"}
    - Response: {"ok": true, "result": {...}}
 
-7. Bot (Telegram API):
+8. Bot (Telegram API):
    - Receives sendMessage request from our code.
    - Queues DM to user's chat (ALERT_CHAT_ID).
 
-8. Telegram server:
+9. Telegram server:
    - Delivers DM to user's Telegram app.
    - Since DM is from a bot and user hasn't muted the bot, push notification sent.
 
-9. User's phone:
-   - Receives push notification "You were mentioned! From: Alice..."
-   - User taps notification → jumps to the original message in the group.
+10. User's phone:
+    - Receives push notification "You were mentioned! From: Alice..."
+    - User taps notification → jumps to the original message in the group.
 ```
 
 ---

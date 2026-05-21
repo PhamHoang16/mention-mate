@@ -30,11 +30,12 @@ MentionMate is a lightweight, self-hosted daemon that:
 - ✅ Transparent, idempotent container startup.
 - ✅ Security by default: session files and env-vars excluded from repo, chmod 600 permissions, non-root container user.
 
-### Goals (Phase 1 — Hardening) **Planned**
+### Goals (Phase 1 — Hardening) **In Progress**
+- ✅ **First test scaffold**: 13 tests covering new seams (permalink resolver, alert renderer); pytest installed as optional dev dependency.
 - Structured logging (timestamps, severity levels, JSON output for SIEM).
 - HTTP `/healthz` health check endpoint (replaces `pgrep` in compose).
 - Exponential backoff + circuit-breaker for Telegram API failures.
-- Unit + integration test coverage (→ 80% code coverage).
+- Expand test coverage (mention detection, config loading, integration tests) → 80% full codebase.
 - Dependency pinning + CVE scanning in CI/CD.
 
 ### Goals (Phase 3 — Feature Expansion) **Planned**
@@ -122,7 +123,9 @@ Telegram Groups (user in multiple groups)
          ↓
     [Mention detector — regex/substring match on @username]
          ↓
-  [Alert formatter — HTML + plain-text fallback]
+  [Permalink resolver — discriminate Channel vs Chat vs User]
+         ↓
+  [Alert renderer — HTML + plain-text with user content escaped]
          ↓
  [Bot — aiohttp POST to api.telegram.org]
          ↓

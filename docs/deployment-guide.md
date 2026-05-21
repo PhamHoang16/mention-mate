@@ -176,6 +176,23 @@ docker compose exec bot ps aux  # Show running processes
 
 **Healthcheck:** 30-second interval, 5-second timeout, 3 retries (pgrep-based in v0.1.0; Phase 1 upgrades to HTTP `/healthz`).
 
+### Testing (Development)
+
+To run the test suite locally:
+
+```bash
+# Install dev dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest tests/
+
+# Run with coverage report
+pytest --cov=src/mention_mate tests/
+```
+
+**Tests cover**: Permalink URL generation, alert message rendering, HTML escaping. Production image does not include pytest; tests run on developer machines or CI/CD only.
+
 ### Common Commands
 
 | Task | Command |

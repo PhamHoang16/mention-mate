@@ -6,11 +6,11 @@ Living document tracking project phases, milestones, and progress. Last updated:
 
 ## Phase 1: Hardening
 
-**Status:** ⏳ Planned (post-v0.1.0)
+**Status:** 🚀 In Progress (started during v0.1.0)
 
 **Goal:** Improve observability, resilience, and test coverage. No new user-facing features.
 
-**Timeline:** TBD (pending v0.1.0 release and user feedback).
+**Timeline:** TBD (v0.2.0-beta target: ~6–8 weeks post-v0.1.0).
 
 ### Deliverables
 
@@ -46,19 +46,22 @@ Living document tracking project phases, milestones, and progress. Last updated:
 - **Dependencies**: None (implement with asyncio.sleep, manual counter).
 
 #### 4. Unit Tests
-- **Scope**: Test core logic (mention detection, alert formatting, HTML escaping).
-- **Acceptance Criteria**:
-  - ≥80% code coverage (measured by coverage.py).
-  - Test files: `tests/unit/test_mention_detection.py`, `tests/unit/test_alert_formatting.py`, `tests/unit/test_config.py`.
-  - Tools: pytest + pytest-asyncio.
-  - All tests pass on CI (GitHub Actions).
-  - Performance: test suite runs in <10 seconds.
-- **Test Scenarios**:
+- **Scope**: Test core logic (mention detection, alert formatting, HTML escaping, permalink resolution).
+- **Status**: ✅ **First scaffold complete** (13 tests in place).
+  - `tests/test_permalink_resolver.py`: 6 tests covering Channel (with/without username), basic groups, DMs, None cases.
+  - `tests/test_alert_renderer.py`: 7 tests covering HTML escaping, plain-text rendering, link/fallback handling, byte-identical rendering.
+  - Install: `pip install -e ".[dev]"` (pytest>=8 from optional-dependencies).
+  - Run: `pytest tests/`.
+- **Remaining Phase 1 Coverage**:
   - Mention detection: case-insensitive match, media captions fallback, non-matches.
-  - Alert formatting: HTML escaping (special chars), link generation, plain-text fallback.
   - Config loading: env var parsing, validation, missing required vars.
   - HTTP errors: 400, 429, 5xx; verify backoff/circuit-breaker.
-- **Files affected**: New `tests/` directory, `pyproject.toml` (add pytest dev dependency).
+  - Integration test: full alert pipeline end-to-end.
+- **Acceptance Criteria**:
+  - ≥80% code coverage (measured by coverage.py).
+  - All tests pass on CI (GitHub Actions).
+  - Performance: test suite runs in <10 seconds.
+- **Files affected**: `tests/` directory (already created), `pyproject.toml` (pytest>=8 already added).
 - **Dependencies**: pytest, pytest-asyncio, coverage.py.
 
 #### 5. Integration Tests
