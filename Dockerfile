@@ -3,9 +3,9 @@
 # Image optimization goals (in order): size, then security.
 
 # --- Stage 1: builder ------------------------------------------------------
-# python:3.11-alpine (musllinux) — digest-pinned for reproducibility.
+# python:3.12-alpine (musllinux) — digest-pinned for reproducibility.
 # Refresh digest when bumping Python patch versions or on CVE bulletins.
-FROM python:3.11-alpine@sha256:8b5bfdb1fd2d78aa94e21c4d61be52487693f54be7f1021647751ff365795703 AS builder
+FROM python:3.12-alpine AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -35,15 +35,15 @@ RUN pip install --prefix=/install .
 RUN find /install -type d \( -name '__pycache__' -o -name 'tests' -o -name 'test' \) -prune -exec rm -rf {} + \
  && find /install -type d -name '*.dist-info' -prune -exec rm -rf {} + \
  && find /install -type f \( -name '*.pyi' -o -name '*.pyc' -o -name '*.pyo' \) -delete \
- && rm -rf /install/lib/python3.11/site-packages/pip \
-           /install/lib/python3.11/site-packages/setuptools \
-           /install/lib/python3.11/site-packages/wheel \
-           /install/lib/python3.11/site-packages/pkg_resources \
+ && rm -rf /install/lib/python3.12/site-packages/pip \
+           /install/lib/python3.12/site-packages/setuptools \
+           /install/lib/python3.12/site-packages/wheel \
+           /install/lib/python3.12/site-packages/pkg_resources \
            /install/bin/pip* \
            /install/bin/wheel*
 
 # --- Stage 2: runtime ------------------------------------------------------
-FROM python:3.11-alpine@sha256:8b5bfdb1fd2d78aa94e21c4d61be52487693f54be7f1021647751ff365795703
+FROM python:3.12-alpine
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -54,15 +54,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 RUN adduser -D -u 1001 tgbot \
  && mkdir -p /app/data \
  && chown -R tgbot:tgbot /app \
- && rm -rf /usr/local/lib/python3.11/site-packages/pip \
-           /usr/local/lib/python3.11/site-packages/pip-*.dist-info \
-           /usr/local/lib/python3.11/site-packages/setuptools \
-           /usr/local/lib/python3.11/site-packages/setuptools-*.dist-info \
-           /usr/local/lib/python3.11/site-packages/wheel \
-           /usr/local/lib/python3.11/site-packages/wheel-*.dist-info \
-           /usr/local/lib/python3.11/site-packages/_distutils_hack \
-           /usr/local/lib/python3.11/site-packages/distutils-precedence.pth \
-           /usr/local/lib/python3.11/site-packages/pkg_resources \
+ && rm -rf /usr/local/lib/python3.12/site-packages/pip \
+           /usr/local/lib/python3.12/site-packages/pip-*.dist-info \
+           /usr/local/lib/python3.12/site-packages/setuptools \
+           /usr/local/lib/python3.12/site-packages/setuptools-*.dist-info \
+           /usr/local/lib/python3.12/site-packages/wheel \
+           /usr/local/lib/python3.12/site-packages/wheel-*.dist-info \
+           /usr/local/lib/python3.12/site-packages/_distutils_hack \
+           /usr/local/lib/python3.12/site-packages/distutils-precedence.pth \
+           /usr/local/lib/python3.12/site-packages/pkg_resources \
            /usr/local/bin/pip* \
            /usr/local/bin/wheel* \
            /usr/local/bin/idle* \
