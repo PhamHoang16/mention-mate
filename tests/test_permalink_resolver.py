@@ -18,9 +18,10 @@ def _fake_channel(*, id: int = 0, username: str | None = None) -> Channel:
     return obj
 
 
-def _fake_chat(*, id: int = 0) -> Chat:
+def _fake_chat(*, id: int = 0, migrated_to=None) -> Chat:
     obj = Chat.__new__(Chat)
     obj.id = id
+    obj.migrated_to = migrated_to
     return obj
 
 
@@ -46,8 +47,17 @@ def test_supergroup_empty_string_username():
     assert resolve_message_link(chat, 99) == "https://t.me/c/12345/99"
 
 
-def test_basic_group_returns_none():
+def test_basic_group_uses_tme_jump_link():
+    # Basic groups (Chat) get the same t.me/c jump link as private channels;
+    # it resolves for basic groups too and is clickable on every client.
     chat = _fake_chat(id=12345)
+    assert resolve_message_link(chat, 99) == "https://t.me/c/12345/99"
+
+
+def test_migrated_basic_group_returns_none():
+    # A basic group migrated to a supergroup: live messages live on the new
+    # peer, so the old-id link would be dead — return None.
+    chat = _fake_chat(id=12345, migrated_to=object())
     assert resolve_message_link(chat, 99) is None
 
 
