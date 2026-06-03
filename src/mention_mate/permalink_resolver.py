@@ -7,15 +7,19 @@ that knows about Telethon TL types.
 URL forms:
     Channel + public username → https://t.me/{username}/{message_id}
     Channel + private         → https://t.me/c/{chat.id}/{message_id}
-    Chat (basic group)        → tg://openmessage?chat_id={chat.id}
+    Chat (basic group)        → https://t.me/c/{chat.id}/{message_id}
     User (1-1 DM)             → tg://user?id={sender.id}   (sender required)
     Migrated Chat / unknown   → None
 
-Telegram's t.me/c/<id> path only resolves for Channel (supergroups, megagroups,
-broadcast channels). For Chat (basic groups) it lands on an unrelated channel
-and shows "no permission". The tg:// deep-link scheme is honored by iOS,
-Android and Desktop clients; the Web client renders it as inert text — still a
-strict UX improvement over no link at all.
+The t.me/c/<id>/<msg> deep link jumps straight to the message and is clickable
+on every client, including Telegram Web. It resolves for basic groups (Chat) as
+well as supergroups/channels — the bare chat id is all Telegram needs. We use it
+for both rather than tg://openmessage, which only opens the chat (no message
+jump) and renders as inert text on the Web client.
+
+Migrated basic groups are the exception: their live messages now live on the
+linked supergroup, so a t.me/c link built from the old basic-group id would be
+dead — we return None instead.
 """
 from telethon.tl.types import Channel, Chat, User
 
@@ -34,12 +38,14 @@ def resolve_message_link(chat, message_id: int, *, sender=None) -> str | None:
             return f"https://t.me/{username}/{message_id}"
         return f"https://t.me/c/{chat.id}/{message_id}"
     if isinstance(chat, Chat):
-        # Basic group migrated to a supergroup — the channel_id lives on
-        # the migrated_to peer; we'd rather link nothing than send the user
-        # to a dead chat.
+        # Basic group migrated to a supergroup — the live messages now live on
+        # the migrated_to peer, so a t.me/c link from the old id would be dead;
+        # we'd rather link nothing.
         if getattr(chat, "migrated_to", None):
             return None
-        return f"tg://openmessage?chat_id={chat.id}"
+        # Same t.me/c jump link as a private channel: it resolves for basic
+        # groups too and is clickable on every client (incl. Web).
+        return f"https://t.me/c/{chat.id}/{message_id}"
     if isinstance(chat, User) and sender is not None:
         return f"tg://user?id={sender.id}"
     return None
