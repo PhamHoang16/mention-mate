@@ -1,9 +1,8 @@
 """Tests for alert_renderer.
 
 Expected output strings are captured inline as ``_EXPECTED_*`` constants
-(no separate fixture directory) — the values were produced via repr() in
-a REPL against the pre-refactor template logic, so the renderer is locked
-to byte-identical output for the canonical happy-path inputs.
+(no separate fixture directory) — the values lock the renderer to
+byte-identical output for the canonical happy-path inputs.
 
 Tests cover:
 - Two happy-path comparisons (supergroup-with-link, basic-group-without-link).
@@ -15,34 +14,33 @@ from mention_mate.alert_renderer import render_alert
 
 
 _EXPECTED_HTML_SUPER = (
-    "👋 <b>Hoang</b> mentioned you in <i>Backend Team</i>\n"
-    "━━━━━━━━━━━━━━━\n"
-    "<blockquote expandable>hey @duong check this please</blockquote>\n"
-    "━━━━━━━━━━━━━━━\n"
-    '🔗 <a href="https://t.me/c/12345/99">Open in Telegram →</a>'
+    "🔔 <b>You were mentioned!</b>\n"
+    "👤 <b>From:</b> Hoang\n"
+    "🏢 <b>Group:</b> Backend Team\n\n"
+    "<blockquote>hey @duong check this please</blockquote>\n\n"
+    '🔗 <a href="https://t.me/c/12345/99">Jump to message</a>'
 )
 _EXPECTED_PLAIN_SUPER = (
-    "👋 Hoang mentioned you in Backend Team\n"
-    "━━━━━━━━━━━━━━━\n"
-    "hey @duong check this please\n"
-    "━━━━━━━━━━━━━━━\n"
+    "🔔 You were mentioned!\n"
+    "👤 From: Hoang\n"
+    "🏢 Group: Backend Team\n\n"
+    "hey @duong check this please\n\n"
     "🔗 https://t.me/c/12345/99"
 )
 _EXPECTED_HTML_BASIC = (
-    "👋 <b>Hoang</b> mentioned you in <i>Backend Team</i>\n"
-    "━━━━━━━━━━━━━━━\n"
-    "<blockquote expandable>hey @duong check this please</blockquote>\n"
-    "━━━━━━━━━━━━━━━\n"
-    "💡 <i>Basic group — open Telegram and check "
-    "<b>Backend Team</b> to find this message.</i>"
+    "🔔 <b>You were mentioned!</b>\n"
+    "👤 <b>From:</b> Hoang\n"
+    "🏢 <b>Group:</b> Backend Team\n\n"
+    "<blockquote>hey @duong check this please</blockquote>\n\n"
+    "💡 <i>Open Telegram and check <b>Backend Team</b> "
+    "to find this message.</i>"
 )
 _EXPECTED_PLAIN_BASIC = (
-    "👋 Hoang mentioned you in Backend Team\n"
-    "━━━━━━━━━━━━━━━\n"
-    "hey @duong check this please\n"
-    "━━━━━━━━━━━━━━━\n"
-    "💡 Basic group — open Telegram and check "
-    "Backend Team to find this message."
+    "🔔 You were mentioned!\n"
+    "👤 From: Hoang\n"
+    "🏢 Group: Backend Team\n\n"
+    "hey @duong check this please\n\n"
+    "💡 Open Telegram and check Backend Team to find this message."
 )
 
 
@@ -89,10 +87,11 @@ def test_html_escape_chat_title_in_fallback():
         message_link=None,
     )
     assert "&lt;/b&gt;&lt;b&gt;injected" in html_msg
-    # No raw closing/opening <b> tags from the chat title leaked out.
-    # (The legitimate <b>...</b> wrappers we emit count as 2 each, not user-injected.)
-    assert html_msg.count("</b>") == 2  # header sender, fallback chat title
-    assert html_msg.count("<b>") == 2
+    # The only legitimate <b>...</b> wrappers we emit: 3 in the header
+    # (title, From, Group) + 1 around the chat title in the fallback = 4.
+    # No raw <b> tags from the injected chat title leaked through.
+    assert html_msg.count("</b>") == 4
+    assert html_msg.count("<b>") == 4
 
 
 def test_html_escape_message_text():
