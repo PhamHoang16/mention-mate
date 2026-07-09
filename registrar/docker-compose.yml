@@ -1,0 +1,18 @@
+# MentionMate Registrar — admin-only, internal network access only.
+# See README.md for the security requirements before deploying this.
+services:
+  registrar:
+    build: .
+    container_name: mention-mate-registrar
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "127.0.0.1:8000:8000"  # bind to loopback only; front with your VPN-only reverse proxy
+    volumes:
+      - ./registrar-data:/app/registrar-data
+      - /var/run/docker.sock:/var/run/docker.sock  # Docker-outside-of-Docker: lets the registrar spawn sibling containers
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

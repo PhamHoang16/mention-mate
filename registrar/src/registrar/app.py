@@ -161,3 +161,22 @@ def create_app(
         return templates.TemplateResponse(request, "register_finalize.html", {"username": username})
 
     return app
+
+
+# Module-level app for `uvicorn registrar.app:app`, wired from env vars.
+def _build_app_from_env():
+    from docker import DockerClient
+    from registrar.config import load_settings
+
+    settings = load_settings()
+    return create_app(
+        bot_token=settings.bot_token,
+        data_root=settings.data_root,
+        registrations_path=settings.registrations_path,
+        docker_client=DockerClient(base_url="unix://var/run/docker.sock"),
+        image=settings.image,
+        stagger_seconds=settings.stagger_seconds,
+    )
+
+
+app = _build_app_from_env()
