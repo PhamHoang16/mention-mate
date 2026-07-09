@@ -6,9 +6,12 @@ Route summary (finalized in Task 8):
 - POST /register/finalize — resolve chat_id, write .env, launch the container
 """
 import os
+from pathlib import Path
 
 import aiohttp
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
 from registrar.chat_id_resolver import ChatIdNotFoundError, resolve_chat_id
@@ -63,6 +66,7 @@ def create_app(
     stagger_seconds: int,
 ) -> FastAPI:
     app = FastAPI(title="MentionMate Registrar")
+    templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
     app.state.bot_token = bot_token
     app.state.data_root = data_root
     app.state.store = RegistrationStore(registrations_path)
@@ -143,5 +147,17 @@ def create_app(
         await app.state.store.set(req.username, {"status": "active", "chat_id": chat_id})
         del PENDING[req.username]
         return {"status": "active", "container_id": container_id}
+
+    @app.get("/register", response_class=HTMLResponse)
+    async def register_page(request: Request):
+        return templates.TemplateResponse(request, "register_start.html", {})
+
+    @app.get("/register/verify-page", response_class=HTMLResponse)
+    async def register_verify_page(request: Request, username: str):
+        return templates.TemplateResponse(request, "register_verify.html", {"username": username})
+
+    @app.get("/register/finalize-page", response_class=HTMLResponse)
+    async def register_finalize_page(request: Request, username: str):
+        return templates.TemplateResponse(request, "register_finalize.html", {"username": username})
 
     return app

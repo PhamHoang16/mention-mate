@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>MentionMate — Register</title></head>
+<body>
+  <h1>Register for MentionMate</h1>
+  <p>Create your own API_ID/API_HASH first at
+     <a href="https://my.telegram.org/apps">my.telegram.org/apps</a>, then fill this in.</p>
+  <form id="start-form">
+    <label>Phone number (with country code): <input name="phone" required></label><br>
+    <label>API_ID: <input name="api_id" type="number" required></label><br>
+    <label>API_HASH: <input name="api_hash" required></label><br>
+    <label>Telegram username (no @): <input name="username" required></label><br>
+    <button type="submit">Send code</button>
+  </form>
+  <script>
+    document.getElementById("start-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = new FormData(e.target);
+      const body = {
+        phone: form.get("phone"),
+        api_id: parseInt(form.get("api_id"), 10),
+        api_hash: form.get("api_hash"),
+        username: form.get("username"),
+      };
+      const resp = await fetch("/register/start", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(body),
+      });
+      if (resp.ok) {
+        window.location = `/register/verify-page?username=${encodeURIComponent(body.username)}`;
+      } else {
+        alert("Could not send code: " + (await resp.text()));
+      }
+    });
+  </script>
+</body>
+</html>
