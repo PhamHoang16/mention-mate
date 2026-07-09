@@ -37,3 +37,37 @@ def test_finalize_page_has_confirm_button(tmp_path):
     assert response.status_code == 200
     assert "hoangp47" in response.text
     assert "<button" in response.text
+
+
+def test_finalize_page_escapes_username_for_json(tmp_path):
+    """Verify that usernames with backslashes are properly JSON-escaped in the inline script."""
+    # Username with backslash that would break JS string literal if not properly escaped
+    test_username = 'user\\with\\backslash'
+    response = _client(tmp_path).get("/register/finalize-page", params={"username": test_username})
+
+    assert response.status_code == 200
+    body = response.text
+
+    # The username should be present in the response (in JSON-escaped form)
+    assert "user" in body
+
+    # Verify the script block contains the properly escaped username
+    # When {{ username | tojson }} is used, it produces a JSON string literal with proper escaping
+    # For 'user\\with\\backslash', tojson produces "user\\with\\backslash" (double-escaped in HTML)
+    # The key check: the script should contain JSON.stringify({username: "user\\\\with\\\\backslash"})
+    # and should NOT be corrupted (i.e., script should parse correctly)
+
+    # Extract and verify the JSON.stringify part contains valid escaping
+    import json
+    import re
+
+    # Find the JSON.stringify call in the script
+    match = re.search(r'JSON\.stringify\(\{username:\s*([^}]+)\}\)', body)
+    assert match is not None, "Could not find JSON.stringify call in response"
+
+    # The matched group should be a valid JSON string representing the username
+    json_value = match.group(1).strip()
+
+    # Parse the JSON value to verify it's valid JSON
+    decoded = json.loads(json_value)
+    assert decoded == test_username, f"Expected {test_username}, got {decoded}"
