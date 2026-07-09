@@ -123,8 +123,13 @@ def test_register_finalize_starts_container(mock_resolve_chat_id, mock_orchestra
 
     response = client.post("/register/finalize", json={"username": "hoangp47"})
 
-    assert response.status_code == 200
-    assert response.json() == {"status": "active", "container_id": "container-id"}
+    # Fix 2: the request returns immediately (202 queued) instead of blocking
+    # for up to stagger_seconds; the actual launch + confirmation happen in a
+    # background task. FastAPI's TestClient runs background tasks to
+    # completion as part of the same request/response cycle, so we can still
+    # assert on their side effects right after client.post() returns.
+    assert response.status_code == 202
+    assert response.json() == {"status": "queued"}
     mock_orchestrator.start_user_container.assert_called_once()
     call = mock_orchestrator.start_user_container.call_args
     assert call.args[0] == "hoangp47"
@@ -134,6 +139,30 @@ def test_register_finalize_starts_container(mock_resolve_chat_id, mock_orchestra
     confirm_call = mock_send_confirmation.call_args
     assert confirm_call.kwargs["bot_token"] == "123:abc"
     assert confirm_call.kwargs["chat_id"] == 987654321
+    # Fix 4: successful finalize still cleans up the in-memory PENDING entry.
+    assert "hoangp47" not in PENDING
+
+
+@patch("registrar.app.send_confirmation", new_callable=AsyncMock)
+@patch("registrar.app.Orchestrator")
+@patch("registrar.app.resolve_chat_id", new_callable=AsyncMock)
+def test_register_finalize_completes_registration_even_if_confirmation_dm_fails(
+    mock_resolve_chat_id, mock_orchestrator_cls, mock_send_confirmation, tmp_path
+):
+    """Fix 3: send_confirmation failing (e.g. Bot API returns non-ok) must not
+    abort a registration whose container already launched successfully."""
+    mock_resolve_chat_id.return_value = 987654321
+    mock_orchestrator = mock_orchestrator_cls.return_value
+    mock_orchestrator.start_user_container.return_value = "container-id"
+    mock_send_confirmation.side_effect = RuntimeError("Bot API error sending confirmation: {'ok': False}")
+    client = _logged_in_client(tmp_path)
+
+    response = client.post("/register/finalize", json={"username": "hoangp47"})
+
+    assert response.status_code == 202
+    mock_orchestrator.start_user_container.assert_called_once()
+    # Registration bookkeeping still completes despite the DM failure.
+    assert "hoangp47" not in PENDING
 
 
 @patch("registrar.app.resolve_chat_id", new_callable=AsyncMock)

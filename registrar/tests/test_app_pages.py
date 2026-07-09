@@ -1,4 +1,4 @@
-from registrar.app import create_app
+from registrar.app import PENDING, create_app
 
 
 def _client(tmp_path):
@@ -37,6 +37,22 @@ def test_finalize_page_has_confirm_button(tmp_path):
     assert response.status_code == 200
     assert "hoangp47" in response.text
     assert "<button" in response.text
+
+
+def test_finalize_page_shows_the_pending_nonce_for_this_username(tmp_path):
+    """Fix 1: the finalize page must tell the user the exact nonce to send
+    (`/start <nonce>`), threaded from PENDING[username]["nonce"], so
+    resolve_chat_id can correlate the right chat_id for this registration
+    instead of grabbing whichever update is most recent on the shared bot.
+    """
+    PENDING["hoangp47"] = {"nonce": "test-nonce-xyz"}
+    try:
+        response = _client(tmp_path).get("/register/finalize-page", params={"username": "hoangp47"})
+    finally:
+        PENDING.clear()
+
+    assert response.status_code == 200
+    assert "test-nonce-xyz" in response.text
 
 
 def test_finalize_page_escapes_username_for_json(tmp_path):

@@ -3,7 +3,7 @@
 <head><meta charset="utf-8"><title>MentionMate — Finalize</title></head>
 <body>
   <h1>Almost done</h1>
-  <p>Open Telegram, find the shared alert bot, and send it <code>/start</code> — then click Confirm.</p>
+  <p>Open Telegram, find the shared alert bot, and send: <code>/start {{ nonce }}</code> — then click Confirm.</p>
   <button id="confirm-btn">Confirm</button>
   <p id="status"></p>
   <script>
@@ -14,9 +14,14 @@
         body: JSON.stringify({username: {{ username | tojson }}}),
       });
       const text = await resp.text();
-      document.getElementById("status").textContent = resp.ok
-        ? "Your MentionMate is now running!"
-        : "Not ready yet: " + text;
+      if (resp.status === 202) {
+        document.getElementById("status").textContent =
+          "Registration queued — you'll get a confirmation message on Telegram once it's ready.";
+      } else if (resp.ok) {
+        document.getElementById("status").textContent = "Your MentionMate is now running!";
+      } else {
+        document.getElementById("status").textContent = "Not ready yet: " + text;
+      }
     });
   </script>
 </body>
