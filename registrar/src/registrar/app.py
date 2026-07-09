@@ -7,9 +7,14 @@ Route summary (finalized in Task 8):
 """
 import os
 
+import aiohttp
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+from registrar.chat_id_resolver import ChatIdNotFoundError, resolve_chat_id
+from registrar.env_writer import build_env, write_user_env_file
+from registrar.orchestrator import Orchestrator
+from registrar.queue import StaggerQueue
 from registrar.store import RegistrationStore
 from registrar.telegram_login import TwoFactorRequired, complete_login, start_login
 
@@ -32,8 +37,21 @@ class RegisterVerifyRequest(BaseModel):
     password: str | None = None
 
 
+class RegisterFinalizeRequest(BaseModel):
+    username: str
+
+
 def _session_path(data_root: str, username: str) -> str:
     return os.path.join(data_root, username, "mentions_session")
+
+
+async def send_confirmation(session, bot_token: str, chat_id: int) -> None:
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload = {"chat_id": chat_id, "text": "✅ Your MentionMate is now running. You're all set!"}
+    async with session.post(url, json=payload) as resp:
+        data = await resp.json()
+        if not data.get("ok"):
+            raise RuntimeError(f"Bot API error sending confirmation: {data}")
 
 
 def create_app(
@@ -51,6 +69,8 @@ def create_app(
     app.state.docker_client = docker_client
     app.state.image = image
     app.state.stagger_seconds = stagger_seconds
+    app.state.orchestrator = Orchestrator(client=docker_client, image=image)
+    app.state.queue = StaggerQueue(min_interval_seconds=stagger_seconds)
 
     @app.post("/register/start")
     async def register_start(req: RegisterStartRequest):
@@ -89,5 +109,39 @@ def create_app(
 
         pending["logged_in"] = True
         return {"status": "logged_in"}
+
+    @app.post("/register/finalize")
+    async def register_finalize(req: RegisterFinalizeRequest):
+        pending = PENDING.get(req.username)
+        if pending is None or not pending.get("logged_in"):
+            raise HTTPException(status_code=404, detail="login_not_completed")
+
+        async with aiohttp.ClientSession() as session:
+            try:
+                chat_id = await resolve_chat_id(session, bot_token=bot_token)
+            except ChatIdNotFoundError:
+                raise HTTPException(status_code=409, detail="chat_id_not_found")
+
+        env = build_env(
+            bot_token=bot_token,
+            api_id=pending["api_id"],
+            api_hash=pending["api_hash"],
+            username=req.username,
+            alert_chat_id=chat_id,
+        )
+        write_user_env_file(data_root, req.username, env)
+        user_data_dir = os.path.join(data_root, req.username)
+
+        async def launch():
+            return app.state.orchestrator.start_user_container(req.username, env, user_data_dir)
+
+        container_id = await app.state.queue.run(launch)
+
+        async with aiohttp.ClientSession() as confirm_session:
+            await send_confirmation(confirm_session, bot_token=bot_token, chat_id=chat_id)
+
+        await app.state.store.set(req.username, {"status": "active", "chat_id": chat_id})
+        del PENDING[req.username]
+        return {"status": "active", "container_id": container_id}
 
     return app
