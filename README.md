@@ -10,7 +10,7 @@
 
 Built for DevOps engineers and product managers pulled into dozens of project groups, but useful for anyone who relies on Telegram for work.
 
-> _Demo screenshot / GIF will be added after pilot._
+![MentionMate demo](docs/assets/demo.gif)
 
 ---
 
