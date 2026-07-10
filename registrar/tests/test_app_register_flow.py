@@ -1,3 +1,5 @@
+import os
+import stat
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -49,6 +51,25 @@ def test_register_start_sends_code_and_returns_ok(mock_start_login, tmp_path):
         api_id=1, api_hash="h", session_path=str(tmp_path / "data" / "hoangp47" / "mentions_session"),
         phone="+84900000000",
     )
+
+
+@patch("registrar.app.start_login", new_callable=AsyncMock)
+def test_register_start_creates_the_users_session_directory(mock_start_login, tmp_path):
+    """Regression test: Telethon's SQLiteSession does not create missing
+    parent directories itself — without this, /register/start 500s with
+    sqlite3.OperationalError: unable to open database file the first time
+    a brand-new REGISTRAR_DATA_ROOT is used (e.g. a fresh VPS volume mount).
+    """
+    mock_start_login.return_value = "hash123"
+    client = _client(tmp_path)
+
+    client.post("/register/start", json={
+        "phone": "+84900000000", "api_id": 1, "api_hash": "h", "username": "hoangp47",
+    })
+
+    user_dir = tmp_path / "data" / "hoangp47"
+    assert user_dir.is_dir()
+    assert stat.S_IMODE(os.stat(user_dir).st_mode) == 0o700
 
 
 @patch("registrar.app.complete_login", new_callable=AsyncMock)

@@ -67,7 +67,14 @@ class RegisterFinalizeRequest(BaseModel):
 
 
 def _session_path(data_root: str, username: str) -> str:
-    return os.path.join(data_root, username, "mentions_session")
+    # Telethon's SQLiteSession opens/creates the .session file directly but
+    # will NOT create missing parent directories itself — ensure the user's
+    # data dir exists before Telethon ever touches this path, or sqlite3
+    # raises "unable to open database file".
+    user_dir = os.path.join(data_root, username)
+    os.makedirs(user_dir, exist_ok=True)
+    os.chmod(user_dir, 0o700)  # explicit chmod: makedirs' mode= is subject to umask
+    return os.path.join(user_dir, "mentions_session")
 
 
 async def send_confirmation(session, bot_token: str, chat_id: int) -> None:
