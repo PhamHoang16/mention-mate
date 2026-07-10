@@ -176,13 +176,15 @@ def _logged_in_client(tmp_path):
     return client
 
 
+@patch("registrar.app.fix_ownership_for_container_user")
 @patch("registrar.app.send_confirmation", new_callable=AsyncMock)
 @patch("registrar.app.Orchestrator")
 @patch("registrar.app.resolve_chat_id", new_callable=AsyncMock)
 @patch("registrar.app.complete_login", new_callable=AsyncMock)
 @patch("registrar.app.start_login", new_callable=AsyncMock)
 def test_register_finalize_mounts_the_host_path_not_the_container_path(
-    mock_start_login, mock_complete_login, mock_resolve_chat_id, mock_orchestrator_cls, mock_send_confirmation, tmp_path,
+    mock_start_login, mock_complete_login, mock_resolve_chat_id, mock_orchestrator_cls, mock_send_confirmation,
+    mock_fix_ownership, tmp_path,
 ):
     """Regression: the registrar talks to the HOST's Docker daemon over the
     mounted docker.sock (Docker-outside-of-Docker). A bind-mount source path
@@ -222,10 +224,13 @@ def test_register_finalize_mounts_the_host_path_not_the_container_path(
     assert call.args[2] == str(tmp_path / "actual-host-data" / "hoangp47")
 
 
+@patch("registrar.app.fix_ownership_for_container_user")
 @patch("registrar.app.send_confirmation", new_callable=AsyncMock)
 @patch("registrar.app.Orchestrator")
 @patch("registrar.app.resolve_chat_id", new_callable=AsyncMock)
-def test_register_finalize_starts_container(mock_resolve_chat_id, mock_orchestrator_cls, mock_send_confirmation, tmp_path):
+def test_register_finalize_starts_container(
+    mock_resolve_chat_id, mock_orchestrator_cls, mock_send_confirmation, mock_fix_ownership, tmp_path
+):
     mock_resolve_chat_id.return_value = 987654321
     mock_orchestrator = mock_orchestrator_cls.return_value
     mock_orchestrator.start_user_container.return_value = "container-id"
@@ -253,11 +258,12 @@ def test_register_finalize_starts_container(mock_resolve_chat_id, mock_orchestra
     assert "hoangp47" not in PENDING
 
 
+@patch("registrar.app.fix_ownership_for_container_user")
 @patch("registrar.app.send_confirmation", new_callable=AsyncMock)
 @patch("registrar.app.Orchestrator")
 @patch("registrar.app.resolve_chat_id", new_callable=AsyncMock)
 def test_register_finalize_completes_registration_even_if_confirmation_dm_fails(
-    mock_resolve_chat_id, mock_orchestrator_cls, mock_send_confirmation, tmp_path
+    mock_resolve_chat_id, mock_orchestrator_cls, mock_send_confirmation, mock_fix_ownership, tmp_path
 ):
     """Fix 3: send_confirmation failing (e.g. Bot API returns non-ok) must not
     abort a registration whose container already launched successfully."""

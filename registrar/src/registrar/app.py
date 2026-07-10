@@ -20,7 +20,7 @@ from pydantic import BaseModel
 from telethon.errors import RPCError
 
 from registrar.chat_id_resolver import ChatIdNotFoundError, resolve_chat_id
-from registrar.env_writer import build_env, write_user_env_file
+from registrar.env_writer import build_env, fix_ownership_for_container_user, write_user_env_file
 from registrar.orchestrator import Orchestrator
 from registrar.queue import StaggerQueue
 from registrar.store import RegistrationStore
@@ -201,6 +201,7 @@ def create_app(
             alert_chat_id=chat_id,
         )
         write_user_env_file(data_root, req.username, env)
+        fix_ownership_for_container_user(data_root, req.username)
         # Must be the HOST filesystem path, not this container's own — the
         # Docker daemon we talk to via docker.sock is the HOST's, and it
         # resolves bind-mount sources against the host, not our namespace.

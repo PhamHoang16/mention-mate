@@ -30,3 +30,21 @@ def write_user_env_file(data_root: str, username: str, env: dict[str, str]) -> s
     env_path.write_text(render_env_file(env))
     os.chmod(env_path, stat.S_IRUSR | stat.S_IWUSR)  # 0o600
     return str(env_path)
+
+
+# Fixed by the mention-mate image's Dockerfile: `adduser -D -u 1001 tgbot`.
+MENTION_MATE_CONTAINER_UID = 1001
+MENTION_MATE_CONTAINER_GID = 1001
+
+
+def fix_ownership_for_container_user(data_root: str, username: str) -> None:
+    """The registrar (running as root) writes .env and the Telethon session
+    into this directory, but the per-user MentionMate container that later
+    mounts the same directory runs as a fixed non-root user (uid 1001).
+    Without handing ownership over, that container can't open the session:
+    sqlite3.OperationalError: unable to open database file.
+    """
+    user_dir = Path(data_root) / username
+    os.chown(user_dir, MENTION_MATE_CONTAINER_UID, MENTION_MATE_CONTAINER_GID)
+    for entry in user_dir.iterdir():
+        os.chown(entry, MENTION_MATE_CONTAINER_UID, MENTION_MATE_CONTAINER_GID)
