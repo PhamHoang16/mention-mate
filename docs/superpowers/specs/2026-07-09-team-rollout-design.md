@@ -133,7 +133,19 @@ the registration backend and Docker daemon overhead, with headroom to grow.
 
 ## Out of scope / future hardening
 
-- Per-session outbound proxy (residential/mobile) if the team scales well
-  past ~20 users or Telegram flagging is actually observed in practice.
+- **IP-ban risk reassessment (2026-07-10, after real rollout started):**
+  userbot is passive-read-only (no send/join-spam behavior), which is the
+  main trigger for Telegram's anti-abuse — so risk stays low/moderate at
+  the current ~10-20 user scale, especially with the stagger queue already
+  in place. Two real testers logged in successfully with no restrictions
+  observed. If flagging is actually observed, or the team grows well past
+  ~20 users, two mitigations to revisit (cheapest first):
+  1. Increase `REGISTRAR_STAGGER_SECONDS` (free, one env var).
+  2. Per-session outbound proxy via `TelegramClient(proxy=...)` — routed
+     through the admin's own already-owned Tailscale-connected devices
+     (phone/laptop) for a real residential IP at zero extra cost, rather
+     than paying for residential/mobile proxy services or extra VPS IPs
+     (still datacenter-flagged). Needs code: thread a proxy config through
+     `telegram_login.py`.
 - Central health/heartbeat dashboard, if self-service stops being
   sufficient.
