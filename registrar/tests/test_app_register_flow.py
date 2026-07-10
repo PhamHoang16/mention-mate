@@ -26,6 +26,7 @@ def _client(tmp_path):
     app = create_app(
         bot_token="123:abc",
         data_root=str(tmp_path / "data"),
+        host_data_root=str(tmp_path / "data"),
         registrations_path=str(tmp_path / "registrations.json"),
         docker_client=None,  # not exercised in this task's tests
         image="ghcr.io/phamhoang16/mention-mate:latest",
@@ -173,6 +174,52 @@ def _logged_in_client(tmp_path):
     with patch("registrar.app.complete_login", new_callable=AsyncMock):
         client.post("/register/verify", json={"username": "hoangp47", "code": "12345"})
     return client
+
+
+@patch("registrar.app.send_confirmation", new_callable=AsyncMock)
+@patch("registrar.app.Orchestrator")
+@patch("registrar.app.resolve_chat_id", new_callable=AsyncMock)
+@patch("registrar.app.complete_login", new_callable=AsyncMock)
+@patch("registrar.app.start_login", new_callable=AsyncMock)
+def test_register_finalize_mounts_the_host_path_not_the_container_path(
+    mock_start_login, mock_complete_login, mock_resolve_chat_id, mock_orchestrator_cls, mock_send_confirmation, tmp_path,
+):
+    """Regression: the registrar talks to the HOST's Docker daemon over the
+    mounted docker.sock (Docker-outside-of-Docker). A bind-mount source path
+    it hands the Docker API is resolved against the HOST filesystem, not
+    this container's own namespace — so the per-user container's data
+    volume must be built from host_data_root, not data_root. Using data_root
+    here silently mounted the wrong (often nonexistent) host directory,
+    and the launched container's MentionMate process then failed with
+    sqlite3.OperationalError: unable to open database file because the
+    Telethon session the registrar had just written wasn't where the
+    container's mount pointed.
+    """
+    mock_start_login.return_value = "hash123"
+    mock_resolve_chat_id.return_value = 987654321
+    mock_orchestrator = mock_orchestrator_cls.return_value
+    mock_orchestrator.start_user_container.return_value = "container-id"
+
+    app = create_app(
+        bot_token="123:abc",
+        data_root=str(tmp_path / "container-side-data"),
+        host_data_root=str(tmp_path / "actual-host-data"),
+        registrations_path=str(tmp_path / "registrations.json"),
+        docker_client=None,
+        image="ghcr.io/phamhoang16/mention-mate:latest",
+        stagger_seconds=0,
+    )
+    client = TestClient(app)
+    client.post("/register/start", json={
+        "phone": "+84900000000", "api_id": 1, "api_hash": "h", "username": "hoangp47",
+    })
+    client.post("/register/verify", json={"username": "hoangp47", "code": "12345"})
+
+    client.post("/register/finalize", json={"username": "hoangp47"})
+
+    mock_orchestrator.start_user_container.assert_called_once()
+    call = mock_orchestrator.start_user_container.call_args
+    assert call.args[2] == str(tmp_path / "actual-host-data" / "hoangp47")
 
 
 @patch("registrar.app.send_confirmation", new_callable=AsyncMock)

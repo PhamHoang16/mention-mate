@@ -8,8 +8,23 @@ in the repo root for the full design rationale.
 ## Deploy
 
 1. Create the shared alert bot once via @BotFather, note its token.
-2. Copy `.env.example` to `.env` here and fill in `TG_BOT_TOKEN` (and
-   optionally `REGISTRAR_STAGGER_SECONDS`, default 600 = 10 minutes).
+2. Create a `.env` file here with:
+   ```
+   TG_BOT_TOKEN=<your bot token>
+   REGISTRAR_HOST_DATA_ROOT=<absolute HOST path of this registrar/ dir>/registrar-data
+   # optional, default 600 = 10 minutes:
+   REGISTRAR_STAGGER_SECONDS=600
+   ```
+   `REGISTRAR_HOST_DATA_ROOT` is **required** and easy to get wrong: it
+   must be the real path on the VPS's own filesystem (e.g.
+   `/home/youruser/mention-mate/registrar/registrar-data`), NOT
+   `/app/registrar-data` (that's only how this container sees it). The
+   registrar talks to the host's Docker daemon over the mounted
+   `docker.sock` to launch each user's container (Docker-outside-of-Docker),
+   and that daemon resolves bind-mount paths against the HOST filesystem —
+   getting this wrong silently mounts the wrong directory into the new
+   container, which then fails with
+   `sqlite3.OperationalError: unable to open database file`.
 3. `docker compose up -d --build`.
 4. Point your internal-only reverse proxy / VPN at `127.0.0.1:8000` on
    this VPS. **Do not expose this port publicly** — it drives Telegram

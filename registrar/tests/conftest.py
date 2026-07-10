@@ -9,3 +9,4 @@ import tempfile
 # `create_app(...)` directly) is unaffected by that module-level wiring.
 os.environ.setdefault("TG_BOT_TOKEN", "test-placeholder-token")
 os.environ.setdefault("REGISTRAR_DATA_ROOT", tempfile.mkdtemp(prefix="registrar-test-data-"))
+os.environ.setdefault("REGISTRAR_HOST_DATA_ROOT", os.environ["REGISTRAR_DATA_ROOT"])

@@ -6,6 +6,7 @@ def _client(tmp_path):
     app = create_app(
         bot_token="123:abc",
         data_root=str(tmp_path / "data"),
+        host_data_root=str(tmp_path / "data"),
         registrations_path=str(tmp_path / "registrations.json"),
         docker_client=None,
         image="ghcr.io/phamhoang16/mention-mate:latest",

@@ -90,6 +90,7 @@ async def send_confirmation(session, bot_token: str, chat_id: int) -> None:
 def create_app(
     bot_token: str,
     data_root: str,
+    host_data_root: str,
     registrations_path: str,
     docker_client,
     image: str,
@@ -200,7 +201,11 @@ def create_app(
             alert_chat_id=chat_id,
         )
         write_user_env_file(data_root, req.username, env)
-        user_data_dir = os.path.join(data_root, req.username)
+        # Must be the HOST filesystem path, not this container's own — the
+        # Docker daemon we talk to via docker.sock is the HOST's, and it
+        # resolves bind-mount sources against the host, not our namespace.
+        # See config.py's REGISTRAR_HOST_DATA_ROOT for the full explanation.
+        user_data_dir = os.path.join(host_data_root, req.username)
 
         background_tasks.add_task(_finalize_in_background, req.username, env, user_data_dir, chat_id)
         return {"status": "queued"}
@@ -234,6 +239,7 @@ def _build_app_from_env():
     return create_app(
         bot_token=settings.bot_token,
         data_root=settings.data_root,
+        host_data_root=settings.host_data_root,
         registrations_path=settings.registrations_path,
         docker_client=DockerClient(base_url="unix://var/run/docker.sock"),
         image=settings.image,
