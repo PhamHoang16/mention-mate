@@ -17,6 +17,7 @@ from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
+from telethon.errors import RPCError
 
 from registrar.chat_id_resolver import ChatIdNotFoundError, resolve_chat_id
 from registrar.env_writer import build_env, write_user_env_file
@@ -108,12 +109,18 @@ def create_app(
     @app.post("/register/start")
     async def register_start(req: RegisterStartRequest):
         _sweep_expired_pending()
-        phone_code_hash = await start_login(
-            api_id=req.api_id,
-            api_hash=req.api_hash,
-            session_path=_session_path(data_root, req.username),
-            phone=req.phone,
-        )
+        try:
+            phone_code_hash = await start_login(
+                api_id=req.api_id,
+                api_hash=req.api_hash,
+                session_path=_session_path(data_root, req.username),
+                phone=req.phone,
+            )
+        except RPCError as e:
+            # Telethon's RPCError messages describe the failure class (e.g.
+            # "api_id/api_hash combination is invalid") without echoing back
+            # the phone/api_hash value itself — safe to relay verbatim.
+            raise HTTPException(status_code=400, detail=str(e)) from e
         PENDING[req.username] = {
             "phone": req.phone,
             "api_id": req.api_id,
@@ -142,6 +149,8 @@ def create_app(
             )
         except TwoFactorRequired:
             raise HTTPException(status_code=400, detail="two_factor_required")
+        except RPCError as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
 
         pending["logged_in"] = True
         return {"status": "logged_in"}

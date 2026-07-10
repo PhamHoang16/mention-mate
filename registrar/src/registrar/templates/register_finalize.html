@@ -20,7 +20,6 @@
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({username: {{ username | tojson }}}),
     });
-    const text = await resp.text();
     if (resp.status === 202) {
       status.className = "success";
       status.textContent = "Registration queued — you'll get a confirmation message on Telegram once it's ready.";
@@ -29,7 +28,7 @@
       status.textContent = "Your MentionMate is now running!";
     } else {
       status.className = "error";
-      status.textContent = "Not ready yet: " + text;
+      status.textContent = "Not ready yet: " + (await describeError(resp));
       e.target.disabled = false;
     }
   });

@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
+from telethon.errors import RPCError
 
 from registrar.app import PENDING, create_app
 from registrar.telegram_login import TwoFactorRequired
@@ -105,6 +106,47 @@ def test_register_verify_reports_two_factor_required(mock_start_login, mock_comp
 
     assert response.status_code == 400
     assert response.json()["detail"] == "two_factor_required"
+
+
+@patch("registrar.app.start_login", new_callable=AsyncMock)
+def test_register_start_reports_telethon_rpc_error_as_400(mock_start_login, tmp_path):
+    """Regression: a real tester hit ApiIdInvalidError (mistyped API_ID/HASH)
+    and got a bare 500 with no explanation. Telethon's RPCError message
+    describes the failure class without echoing back the phone/api_hash
+    value, so it's safe to relay directly instead of a generic 500.
+    """
+    mock_start_login.side_effect = RPCError(
+        request=None, message="The api_id/api_hash combination is invalid"
+    )
+    client = _client(tmp_path)
+
+    response = client.post("/register/start", json={
+        "phone": "+84900000000", "api_id": 1, "api_hash": "h", "username": "hoangp47",
+    })
+
+    assert response.status_code == 400
+    assert "api_id/api_hash combination is invalid" in response.json()["detail"]
+
+
+@patch("registrar.app.complete_login", new_callable=AsyncMock)
+@patch("registrar.app.start_login", new_callable=AsyncMock)
+def test_register_verify_reports_telethon_rpc_error_as_400(mock_start_login, mock_complete_login, tmp_path):
+    """Regression: a real tester entered the wrong 2FA password and got a
+    bare 500 (PasswordHashInvalidError) with no explanation.
+    """
+    mock_start_login.return_value = "hash123"
+    mock_complete_login.side_effect = RPCError(
+        request=None, message="The password (and thus its hash value) you entered is invalid"
+    )
+    client = _client(tmp_path)
+    client.post("/register/start", json={
+        "phone": "+84900000000", "api_id": 1, "api_hash": "h", "username": "hoangp47",
+    })
+
+    response = client.post("/register/verify", json={"username": "hoangp47", "code": "12345"})
+
+    assert response.status_code == 400
+    assert "password" in response.json()["detail"].lower()
 
 
 def test_register_verify_without_prior_start_returns_404(tmp_path):

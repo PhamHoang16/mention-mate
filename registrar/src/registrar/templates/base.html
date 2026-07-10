@@ -208,6 +208,18 @@
     <div class="brand"><span class="dot"></span><span>MentionMate</span></div>
     {% block content %}{% endblock %}
   </div>
+  <script>
+    // FastAPI error responses are JSON: {"detail": "..."}. Fall back to the
+    // raw text if the body isn't JSON (e.g. a proxy-generated error page).
+    async function describeError(resp) {
+      const text = await resp.text();
+      try {
+        const data = JSON.parse(text);
+        if (data && typeof data.detail === "string") return data.detail;
+      } catch (e) { /* not JSON, fall through */ }
+      return text;
+    }
+  </script>
   {% block script %}{% endblock %}
 </body>
 </html>

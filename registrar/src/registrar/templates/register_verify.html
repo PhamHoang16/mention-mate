@@ -39,7 +39,7 @@
       window.location = `/register/finalize-page?username=${encodeURIComponent(body.username)}`;
     } else {
       status.className = "error";
-      status.textContent = "Could not verify: " + (await resp.text());
+      status.textContent = "Could not verify: " + (await describeError(resp));
     }
   });
 </script>
