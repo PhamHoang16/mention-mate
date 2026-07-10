@@ -1,28 +1,37 @@
-<!doctype html>
-<html>
-<head><meta charset="utf-8"><title>MentionMate — Finalize</title></head>
-<body>
+{% extends "base.html" %}
+{% block title %}MentionMate — Finalize{% endblock %}
+{% block content %}
   <h1>Almost done</h1>
-  <p>Open Telegram, find the shared alert bot, and send: <code>/start {{ nonce }}</code> — then click Confirm.</p>
+  <p class="hint">Open Telegram, find the shared alert bot, and send this exact message:</p>
+  <code class="code-block">/start {{ nonce }}</code>
+  <p class="hint">Then click Confirm below.</p>
   <button id="confirm-btn">Confirm</button>
   <p id="status"></p>
-  <script>
-    document.getElementById("confirm-btn").addEventListener("click", async () => {
-      const resp = await fetch("/register/finalize", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({username: {{ username | tojson }}}),
-      });
-      const text = await resp.text();
-      if (resp.status === 202) {
-        document.getElementById("status").textContent =
-          "Registration queued — you'll get a confirmation message on Telegram once it's ready.";
-      } else if (resp.ok) {
-        document.getElementById("status").textContent = "Your MentionMate is now running!";
-      } else {
-        document.getElementById("status").textContent = "Not ready yet: " + text;
-      }
+{% endblock %}
+{% block script %}
+<script>
+  document.getElementById("confirm-btn").addEventListener("click", async (e) => {
+    const status = document.getElementById("status");
+    e.target.disabled = true;
+    status.className = "";
+    status.textContent = "Checking…";
+    const resp = await fetch("/register/finalize", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({username: {{ username | tojson }}}),
     });
-  </script>
-</body>
-</html>
+    const text = await resp.text();
+    if (resp.status === 202) {
+      status.className = "success";
+      status.textContent = "Registration queued — you'll get a confirmation message on Telegram once it's ready.";
+    } else if (resp.ok) {
+      status.className = "success";
+      status.textContent = "Your MentionMate is now running!";
+    } else {
+      status.className = "error";
+      status.textContent = "Not ready yet: " + text;
+      e.target.disabled = false;
+    }
+  });
+</script>
+{% endblock %}

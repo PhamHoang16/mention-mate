@@ -32,11 +32,24 @@ def test_verify_page_has_code_field(tmp_path):
 
 
 def test_finalize_page_has_confirm_button(tmp_path):
-    response = _client(tmp_path).get("/register/finalize-page", params={"username": "hoangp47"})
+    PENDING["hoangp47"] = {"nonce": "some-nonce"}
+    try:
+        response = _client(tmp_path).get("/register/finalize-page", params={"username": "hoangp47"})
+    finally:
+        PENDING.clear()
 
     assert response.status_code == 200
     assert "hoangp47" in response.text
     assert "<button" in response.text
+
+
+def test_finalize_page_redirects_to_register_when_no_pending_registration(tmp_path):
+    response = _client(tmp_path).get(
+        "/register/finalize-page", params={"username": "nobody"}, follow_redirects=False
+    )
+
+    assert response.status_code == 302
+    assert response.headers["location"] == "/register"
 
 
 def test_finalize_page_shows_the_pending_nonce_for_this_username(tmp_path):
@@ -59,7 +72,11 @@ def test_finalize_page_escapes_username_for_json(tmp_path):
     """Verify that usernames with backslashes are properly JSON-escaped in the inline script."""
     # Username with backslash that would break JS string literal if not properly escaped
     test_username = 'user\\with\\backslash'
-    response = _client(tmp_path).get("/register/finalize-page", params={"username": test_username})
+    PENDING[test_username] = {"nonce": "some-nonce"}
+    try:
+        response = _client(tmp_path).get("/register/finalize-page", params={"username": test_username})
+    finally:
+        PENDING.clear()
 
     assert response.status_code == 200
     body = response.text

@@ -14,7 +14,7 @@ from pathlib import Path
 
 import aiohttp
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
@@ -197,11 +197,14 @@ def create_app(
     async def register_verify_page(request: Request, username: str):
         return templates.TemplateResponse(request, "register_verify.html", {"username": username})
 
-    @app.get("/register/finalize-page", response_class=HTMLResponse)
+    @app.get("/register/finalize-page")
     async def register_finalize_page(request: Request, username: str):
         pending = PENDING.get(username)
-        nonce = pending["nonce"] if pending else ""
-        return templates.TemplateResponse(request, "register_finalize.html", {"username": username, "nonce": nonce})
+        if pending is None:
+            return RedirectResponse(url="/register", status_code=302)
+        return templates.TemplateResponse(
+            request, "register_finalize.html", {"username": username, "nonce": pending["nonce"]}
+        )
 
     return app
 
